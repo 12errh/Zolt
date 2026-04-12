@@ -10,22 +10,26 @@ __version__ = "0.1.0"
 __author__ = "PyUI Core Team"
 __license__ = "MIT"
 
-# ── Core classes ────────────────────────────────────────────────────────────
+# ── Core classes ─────────────────────────────────────────────────────────────
 from pyui.app import App
 from pyui.page import Page
 
-# ── State system ────────────────────────────────────────────────────────────
+# ── State system ─────────────────────────────────────────────────────────────
 from pyui.state.reactive import ReactiveVar, reactive
 from pyui.state.computed import computed
 from pyui.state.store import Store, store
 
-# ── Components ───────────────────────────────────────────────────────────────
+# ── Components ────────────────────────────────────────────────────────────────
 from pyui.components.base import BaseComponent
 from pyui.components.input.button import Button
 from pyui.components.display.text import Text
 from pyui.components.display.heading import Heading
+from pyui.components.layout.grid import Grid
 
-# ── Exceptions ───────────────────────────────────────────────────────────────
+# ── Compiler public API ───────────────────────────────────────────────────────
+from pyui.compiler import compile_app
+
+# ── Exceptions ────────────────────────────────────────────────────────────────
 from pyui.exceptions import (
     PyUIError,
     CompilerError,
@@ -51,6 +55,9 @@ __all__ = [
     "Button",
     "Text",
     "Heading",
+    "Grid",
+    # Compiler
+    "compile_app",
     # Exceptions
     "PyUIError",
     "CompilerError",

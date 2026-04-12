@@ -29,7 +29,7 @@ console = Console()
 def main(ctx: click.Context, verbose: bool) -> None:
     """
     \b
-    PyUI — Write Python. Render anywhere.
+    PyUI -- Write Python. Render anywhere.
     Web | Desktop | CLI from a single Python codebase.
     """
     configure_logging("DEBUG" if verbose else "INFO")
@@ -84,15 +84,29 @@ def cmd_new(name: str, template: str, target: str) -> None:
 )
 @click.option("--port", "-p", default=8000, show_default=True, help="Dev server port.")
 @click.option("--host", default="localhost", show_default=True, help="Dev server host.")
+@click.option("--no-browser", is_flag=True, default=False, help="Do not open browser automatically.")
 @click.argument("app_file", default="app.py", required=False)
-def cmd_run(target: str, port: int, host: str, app_file: str) -> None:
+def cmd_run(target: str, port: int, host: str, no_browser: bool, app_file: str) -> None:
     """Start the PyUI dev server (APP_FILE defaults to app.py)."""
-    console.print(
-        f"[yellow]![/yellow]  [bold]pyui run[/bold] is not yet implemented "
-        f"(Phase 1). "
-        f"Would run [cyan]{app_file}[/cyan] -> [cyan]{target}[/cyan] "
-        f"on [cyan]{host}:{port}[/cyan]."
-    )
+    if target != "web":
+        console.print(
+            f"[yellow]![/yellow]  Target [cyan]{target}[/cyan] is not yet implemented. "
+            "Only [bold]web[/bold] is available in Phase 1."
+        )
+        return
+
+    try:
+        from pyui.compiler.discovery import discover_app
+        AppClass = discover_app(app_file)
+    except FileNotFoundError:
+        console.print(f"[red]Error:[/red] App file not found: [cyan]{app_file}[/cyan]")
+        raise SystemExit(1)
+    except Exception as exc:
+        console.print(f"[red]Error:[/red] {exc}")
+        raise SystemExit(1)
+
+    from pyui.server.dev_server import run_dev_server
+    run_dev_server(AppClass, host=host, port=port, open_browser=not no_browser)
 
 
 # ── build ─────────────────────────────────────────────────────────────────────
@@ -108,9 +122,24 @@ def cmd_run(target: str, port: int, host: str, app_file: str) -> None:
 @click.argument("app_file", default="app.py", required=False)
 def cmd_build(target: str, out: str, app_file: str) -> None:
     """Build a production bundle from APP_FILE."""
+    if target not in ("web",):
+        console.print(
+            f"[yellow]![/yellow]  Target [cyan]{target}[/cyan] not yet implemented. "
+            "Using [bold]web[/bold]."
+        )
+        target = "web"
+
+    try:
+        from pyui.compiler.discovery import discover_app
+        AppClass = discover_app(app_file)
+    except Exception as exc:
+        console.print(f"[red]Error:[/red] {exc}")
+        raise SystemExit(1)
+
+    from pyui.compiler import compile_app
+    output_path = compile_app(AppClass, target=target, output_dir=out)
     console.print(
-        f"[yellow]![/yellow]  [bold]pyui build[/bold] is not yet implemented (Phase 1). "
-        f"Would build [cyan]{app_file}[/cyan] -> [cyan]{target}[/cyan] -> [cyan]{out}[/cyan]."
+        f"[green]Built[/green] [cyan]{app_file}[/cyan] -> [cyan]{output_path}[/cyan]"
     )
 
 
