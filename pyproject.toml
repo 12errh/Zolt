@@ -1,0 +1,80 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pyui-framework"
+version = "0.1.0"
+description = "Write Python, render anywhere — web, desktop, and CLI from one codebase."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [{ name = "PyUI Core Team" }]
+keywords = ["ui", "framework", "web", "desktop", "cli", "reactive"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Topic :: Software Development :: User Interfaces",
+]
+dependencies = [
+    "click>=8.1",
+    "jinja2>=3.1",
+    "aiohttp>=3.9",
+    "watchdog>=3.0",
+    "rich>=13.0",
+    "structlog>=24.0",
+    "typing-extensions>=4.9",
+]
+
+[project.optional-dependencies]
+qt = ["PyQt6"]
+images = ["Pillow"]
+e2e = ["playwright", "pytest-playwright"]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.4",
+    "mypy>=1.9",
+    "pre-commit>=3.7",
+    "hatch>=1.9",
+]
+
+[project.scripts]
+pyui = "pyui.cli.main:main"
+
+[project.urls]
+Homepage = "https://github.com/pyui-framework/pyui"
+Documentation = "https://pyui.dev"
+Repository = "https://github.com/pyui-framework/pyui"
+Issues = "https://github.com/pyui-framework/pyui/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pyui"]
+
+[tool.hatch.envs.default]
+dependencies = ["pyui-framework[dev]"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+markers = ["e2e: end-to-end browser tests (require playwright)"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+ignore_missing_imports = true
