@@ -1,16 +1,17 @@
 from pyui.components.base import BaseComponent
+from pyui.state.reactive import ReactiveVar
 
 
 class Textarea(BaseComponent):
     """
-    Multi-line text input field.
+    Multi-line text input.
     """
 
     component_type = "textarea"
 
     def __init__(
         self,
-        value: str = "",
+        value: str | ReactiveVar[str] = "",
         placeholder: str = "",
         rows: int = 4,
         label: str | None = None,

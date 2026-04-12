@@ -102,29 +102,48 @@ class PyUIDevServer:
           {"state": {...current reactive state...}, "reload": false}
         """
         handler_id = request.match_info["handler_id"]
-        handler = get_handler(handler_id)
+        if handler_id == "update_state":
+            # Direct state update from x-model
+            try:
+                data = await request.json()
+                updates = data.get("data", {})
+                import inspect
 
-        if handler is None:
-            return web.Response(
-                status=404,
-                text=json.dumps({"error": f"Unknown handler: {handler_id}"}),
-                content_type="application/json",
-            )
+                from pyui.state.reactive import ReactiveVar
+                for attr_name, new_val in updates.items():
+                    for name, value in inspect.getmembers(self.app_class):
+                        if name == attr_name and isinstance(value, ReactiveVar):
+                            value.set(new_val)
+            except Exception as exc:
+                log.error("State update failed", error=str(exc))
+                return web.Response(
+                    status=400,
+                    text=json.dumps({"error": str(exc)}),
+                    content_type="application/json",
+                )
+        else:
+            handler = get_handler(handler_id)
+            if handler is None:
+                return web.Response(
+                    status=404,
+                    text=json.dumps({"error": f"Unknown handler: {handler_id}"}),
+                    content_type="application/json",
+                )
 
-        with contextlib.suppress(Exception):
-            await request.json() if request.body_exists else {}
+            with contextlib.suppress(Exception):
+                await request.json() if request.body_exists else {}
 
-        try:
-            result = handler()
-            if asyncio.iscoroutine(result):
-                await result
-        except Exception as exc:
-            log.error("Event handler raised", handler_id=handler_id, error=str(exc))
-            return web.Response(
-                status=500,
-                text=json.dumps({"error": str(exc)}),
-                content_type="application/json",
-            )
+            try:
+                result = handler()
+                if asyncio.iscoroutine(result):
+                    await result
+            except Exception as exc:
+                log.error("Event handler raised", handler_id=handler_id, error=str(exc))
+                return web.Response(
+                    status=500,
+                    text=json.dumps({"error": str(exc)}),
+                    content_type="application/json",
+                )
 
         # Snapshot updated reactive state
         import inspect
@@ -136,10 +155,32 @@ class PyUIDevServer:
             if isinstance(value, ReactiveVar):
                 state[attr_name] = value.get()
 
+        # Phase 3: Re-evaluate IR tree to pick up reactive lambda changes
+        self._ir_tree = build_ir_tree(self.app_class)
+        self._generator = WebGenerator(self._ir_tree)
+
+        # Collect updated props for all reactive nodes
+        node_updates: dict[str, dict[str, Any]] = {}
+        for page in self._ir_tree.pages:
+            self._collect_node_updates(page.children, node_updates)
+
         return web.Response(
-            text=json.dumps({"state": state, "reload": True}),
+            text=json.dumps({"state": state, "nodes": node_updates, "reload": False}),
             content_type="application/json",
         )
+
+    def _collect_node_updates(
+        self, nodes: list[Any], updates: dict[str, dict[str, Any]]
+    ) -> None:
+        # Collect initial state for reactive nodes on this page
+        def _collect(nodes: list[Any]) -> None:
+            for n in nodes:
+                if n.reactive_props:
+                    updates[n.node_id] = {k: n.props.get(k) for k in n.reactive_props}
+                if n.children:
+                    _collect(n.children)
+        
+        _collect(nodes)
 
     async def _handle_ws(self, request: web.Request) -> web.WebSocketResponse:
         """WebSocket stub — sends a 'connected' message, then keeps alive."""

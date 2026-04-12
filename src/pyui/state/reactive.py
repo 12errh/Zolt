@@ -16,7 +16,30 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any, Generic, TypeVar
 
+# Registry to track all ReactiveVar instances and their names
+REACTIVE_VAR_REGISTRY: dict[ReactiveVar[Any], str] = {}
+
+
+def register_reactive_name(var: ReactiveVar[Any], name: str) -> None:
+    """Register the name of a ReactiveVar (called by the App compiler)."""
+    REACTIVE_VAR_REGISTRY[var] = name
+
+
+def get_reactive_name(var: ReactiveVar[Any]) -> str | None:
+    """Retrieve the name of a ReactiveVar."""
+    return REACTIVE_VAR_REGISTRY.get(var)
+
 T = TypeVar("T")
+
+
+# Global stack for dependency tracking during evaluation (e.g., in computed or compiler)
+_REACTIVE_CONTEXT: list[set[ReactiveVar[Any]]] = []
+
+
+def _report_access(var: ReactiveVar[Any]) -> None:
+    """Report that a ReactiveVar was accessed in the current context."""
+    if _REACTIVE_CONTEXT:
+        _REACTIVE_CONTEXT[-1].add(var)
 
 
 class ReactiveVar(Generic[T]):
@@ -31,14 +54,16 @@ class ReactiveVar(Generic[T]):
         Starting value.
     """
 
-    def __init__(self, initial: T) -> None:
+    def __init__(self, initial: T, persist: bool = False) -> None:
         self._value: T = initial
+        self._persist: bool = persist
         self._subscribers: list[Callable[[T], None]] = []
 
     # ── Core API ──────────────────────────────────────────────────────────────
 
     def get(self) -> T:
         """Return the current value."""
+        _report_access(self)
         return self._value
 
     def set(self, value: T) -> None:
@@ -106,8 +131,11 @@ class ReactiveVar(Generic[T]):
             return bool(self._value == other._value)
         return bool(self._value == other)
 
+    def __hash__(self) -> int:
+        return id(self)
 
-def reactive(initial: T) -> ReactiveVar[T]:
+
+def reactive(initial: T, persist: bool = False) -> ReactiveVar[T]:
     """
     Shorthand factory for :class:`ReactiveVar`.
 
@@ -116,5 +144,6 @@ def reactive(initial: T) -> ReactiveVar[T]:
         count = reactive(0)
         name  = reactive("PyUI")
         items = reactive([])
+        token = reactive("", persist=True)
     """
-    return ReactiveVar(initial)
+    return ReactiveVar(initial, persist=persist)

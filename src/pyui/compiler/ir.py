@@ -83,6 +83,7 @@ class IRNode:
     children: list[IRNode] = field(default_factory=list)
     events: dict[str, str] = field(default_factory=dict)
     reactive_bindings: list[str] = field(default_factory=list)
+    reactive_props: dict[str, list[str]] = field(default_factory=dict)  # prop_name -> list of dependencies
     style_variant: str | None = None
     theme_tokens: dict[str, str] = field(default_factory=dict)
     node_id: str = field(default_factory=lambda: f"pyui-{uuid.uuid4().hex[:8]}")
@@ -108,12 +109,13 @@ class IRTree:
     theme: str | dict[str, str]
     reactive_vars: dict[str, Any]  # key → current value snapshot
     event_handlers: dict[str, Callable[..., Any]]  # id → callable
+    persistent_vars: list[str] = field(default_factory=list)
 
 
 # ── Builder functions ─────────────────────────────────────────────────────────
 
 
-def build_ir_node(component: BaseComponent) -> IRNode:
+def build_ir_node(component: BaseComponent, path: str | None = None) -> IRNode:
     """
     Recursively convert a :class:`~pyui.components.base.BaseComponent`
     into an :class:`IRNode`.
@@ -122,6 +124,8 @@ def build_ir_node(component: BaseComponent) -> IRNode:
     ----------
     component : BaseComponent
         Any component instance.
+    path : str | None
+        Optional hierarchical path for deterministic IDs.
 
     Returns
     -------
@@ -140,32 +144,79 @@ def build_ir_node(component: BaseComponent) -> IRNode:
         if handler is not None:
             events[event_name] = _register_handler(handler)
 
+    # Hook for dynamic child building (e.g. List component in Phase 3)
+    if hasattr(component, "_build_children") and callable(component._build_children):
+        component._build_children()
+
     # Detect reactive props
     reactive_bindings: list[str] = []
+    reactive_props: dict[str, list[str]] = {}
     props_copy = dict(component.props)
     props_copy["class_name"] = " ".join(component._classes)
 
-    # If content prop is a callable (reactive lambda), resolve it now
-    # and mark that this node is reactive.
+    # If content prop is a callable (reactive lambda) or a ReactiveVar directly,
+    # resolve it now and mark that this node is reactive.
+    from pyui.state.reactive import _REACTIVE_CONTEXT, ReactiveVar, get_reactive_name
+
     for key, val in props_copy.items():
-        if callable(val) and not isinstance(val, type):
-            reactive_bindings.append(key)
-            props_copy["is_reactive"] = True  # explicitly flag for renderer
-            # Resolve the value at compile-time for SSR
+        if isinstance(val, ReactiveVar):
+            name = get_reactive_name(val)
+            if name:
+                reactive_bindings.append(name)
+                reactive_props[key] = [name]
+                props_copy["is_reactive"] = True
+            props_copy[key] = val.get()
+        elif callable(val) and not isinstance(val, type):
+            _REACTIVE_CONTEXT.append(set())
             try:
-                props_copy[key] = val()
+                resolved_val = val()
+                touched = _REACTIVE_CONTEXT.pop()
+                
+                # In Phase 3, we track specific dependencies.
+                # But for existing tests, we mark any lambda as reactive.
+                prop_deps = []
+                for var in touched:
+                    name = get_reactive_name(var)
+                    if name:
+                        prop_deps.append(name)
+                        if name not in reactive_bindings:
+                            reactive_bindings.append(name)
+                
+                # If no specific reactive vars were touched, we still mark the prop as reactive
+                # so the renderer knows it came from a lambda.
+                reactive_props[key] = prop_deps
+                props_copy["is_reactive"] = True
+                if key not in reactive_bindings:
+                    reactive_bindings.append(key)
+
+                # Resolve the value at compile-time for SSR
+                props_copy[key] = resolved_val
             except Exception:
+                _REACTIVE_CONTEXT.pop()
+                # If resolution fails during build, use a safe default
                 props_copy[key] = ""
 
     # Recursively build slots (any prop that is a BaseComponent or list of BaseComponents)
+    from pyui.components.base import BaseComponent
     for key, val in props_copy.items():
         if isinstance(val, BaseComponent):
-            props_copy[key] = build_ir_node(val)
+            props_copy[key] = build_ir_node(val, f"{path}-{key}" if path else None)
         elif isinstance(val, list) and val and isinstance(val[0], BaseComponent):
-            props_copy[key] = [build_ir_node(item) for item in val]
+            props_copy[key] = [
+                build_ir_node(item, f"{path}-{key}-{i}" if path else None) 
+                for i, item in enumerate(val)
+            ]
 
     # Recursively build children
-    children = [build_ir_node(child) for child in component.children]
+    children = [
+        build_ir_node(child, f"{path}-{i}" if path else None) 
+        for i, child in enumerate(component.children)
+    ]
+
+    # Deterministic ID for stability if path is provided, otherwise use random ID from component
+    node_id = component._id
+    if path and (not component._id or component._id.startswith("pyui-")):
+        node_id = f"pyui-{path}"
 
     return IRNode(
         type=component.component_type,
@@ -173,8 +224,9 @@ def build_ir_node(component: BaseComponent) -> IRNode:
         children=children,
         events=events,
         reactive_bindings=reactive_bindings,
+        reactive_props=reactive_props,
         style_variant=component._style_variant,
-        node_id=component._id,
+        node_id=node_id,
     )
 
 
@@ -190,11 +242,10 @@ def build_ir_page(page: Page) -> IRPage:
     -------
     IRPage
     """
-    # Clear children before compose() to prevent duplication during hot reloads
-    page.children.clear()
-
     # Call compose() to populate the children tree if using declarative style
     if hasattr(page, "compose") and callable(page.compose):
+        # Clear children before compose() to prevent duplication during hot reloads
+        page.children.clear()
         with page:
             page.compose()
 
@@ -223,13 +274,17 @@ def build_ir_tree(app_class: type[App]) -> IRTree:
     """
     import inspect
 
-    from pyui.state.reactive import ReactiveVar
+    from pyui.state.reactive import ReactiveVar, register_reactive_name
 
     # Collect reactive vars from the App class
     reactive_vars: dict[str, Any] = {}
+    persistent_vars: list[str] = []
     for attr_name, value in inspect.getmembers(app_class):
         if isinstance(value, ReactiveVar):
             reactive_vars[attr_name] = value.get()
+            register_reactive_name(value, attr_name)
+            if value._persist:
+                persistent_vars.append(attr_name)
 
     pages = [build_ir_page(p) for p in app_class.get_pages()]
 
@@ -244,4 +299,5 @@ def build_ir_tree(app_class: type[App]) -> IRTree:
         theme=app_class.theme,
         reactive_vars=reactive_vars,
         event_handlers=dict(_handler_registry),
+        persistent_vars=persistent_vars,
     )

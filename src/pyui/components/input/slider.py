@@ -1,4 +1,5 @@
 from pyui.components.base import BaseComponent
+from pyui.state.reactive import ReactiveVar
 
 
 class Slider(BaseComponent):
@@ -10,7 +11,7 @@ class Slider(BaseComponent):
 
     def __init__(
         self,
-        value: float = 0,
+        value: float | ReactiveVar[float] = 0,
         min: float = 0,
         max: float = 100,
         step: float = 1,

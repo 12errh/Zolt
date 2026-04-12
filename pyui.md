@@ -36,7 +36,7 @@
    - Phase 0: Project Setup & Foundations (Done)
    - Phase 1: Core Compiler (Web) (Done)
    - Phase 2: Component Library (Done)
-   - Phase 3: State & Reactivity (In Progress)
+   - Phase 3: State & Reactivity (Done)
    - Phase 4: Desktop & CLI Renderers
    - Phase 5: Theme Engine & Marketplace
    - Phase 6: Developer Tooling & Hot Reload

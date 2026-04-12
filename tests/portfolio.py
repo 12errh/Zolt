@@ -1,18 +1,17 @@
 from pyui import (
     App,
-    Page,
-    Flex,
-    Stack,
-    Grid,
-    Container,
-    Spacer,
-    Heading,
-    Text,
     Button,
-    Image,
+    Container,
+    Flex,
+    Grid,
+    Heading,
     Icon,
-    Divider,
+    Image,
+    Page,
+    Stack,
+    Text,
 )
+
 
 class PortfolioPage(Page):
     title = "Jacob's Portfolio | Pro Developer"

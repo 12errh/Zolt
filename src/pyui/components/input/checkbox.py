@@ -1,14 +1,15 @@
 from pyui.components.base import BaseComponent
+from pyui.state.reactive import ReactiveVar
 
 
 class Checkbox(BaseComponent):
     """
-    Boolean checkbox input.
+    Standard checkbox input.
     """
 
     component_type = "checkbox"
 
-    def __init__(self, checked: bool = False, label: str | None = None) -> None:
+    def __init__(self, checked: bool | ReactiveVar[bool] = False, label: str | None = None) -> None:
         super().__init__()
         self.props.update(
             {

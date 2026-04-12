@@ -68,7 +68,11 @@ _PAGE_TEMPLATE = """\
 </head>
 <body class="bg-gray-50 text-gray-900 min-h-screen antialiased"
       x-data='{alpine_data}'
-      x-init="lucide.createIcons();">
+      x-init="lucide.createIcons();
+              window.__pyuiPersistentVars.forEach(key => {{
+                const saved = localStorage.getItem('pyui_state_' + key);
+                if (saved) Alpine.store('pyui').state[key] = JSON.parse(saved);
+              }});">
 
   <!-- PyUI App -->
   <div id="pyui-app" class="{layout_class}">
@@ -78,8 +82,24 @@ _PAGE_TEMPLATE = """\
   <!-- PyUI Runtime -->
   <script>
     window.__pyuiState = {state_json};
+    window.__pyuiNodes = {node_state_json};
+    window.__pyuiPersistentVars = {persistent_vars_json};
+
+    document.addEventListener('alpine:init', () => {{
+      // Load persistent state
+      window.__pyuiPersistentVars.forEach(key => {{
+        const saved = localStorage.getItem('pyui_state_' + key);
+        if (saved) window.__pyuiState[key] = JSON.parse(saved);
+      }});
+
+      Alpine.store('pyui', {{
+        state: window.__pyuiState,
+        nodes: window.__pyuiNodes
+      }});
+    }});
 
     async function __pyuiEvent(handlerId, data) {{
+      console.log('[PyUI] Event:', handlerId, data);
       try {{
         const resp = await fetch('/pyui-api/event/' + handlerId, {{
           method: 'POST',
@@ -87,13 +107,28 @@ _PAGE_TEMPLATE = """\
           body: JSON.stringify({{ handler_id: handlerId, data: data || {{}} }}),
         }});
         const result = await resp.json();
-        if (result.state) {{
+        console.log('[PyUI] Response:', result);
+        
+        // Update global state
+        if (result.state && window.Alpine) {{
           Object.assign(window.__pyuiState, result.state);
-          // Refresh reactive x-data proxy
-          if (window.__pyuiAlpine) {{
-            Object.assign(window.__pyuiAlpine, result.state);
-          }}
+          Object.assign(Alpine.store('pyui').state, result.state);
+          
+          // Persist changes to localStorage (Phase 3)
+          Object.keys(result.state).forEach(key => {{
+            const val = result.state[key];
+            if (window.__pyuiPersistentVars?.includes(key)) {{
+              localStorage.setItem('pyui_state_' + key, JSON.stringify(val));
+            }}
+          }});
         }}
+
+        // Update specific node props (Phase 3)
+        if (result.nodes && window.Alpine) {{
+          // Reassign nodes object to trigger reactivity
+          Alpine.store('pyui').nodes = {{ ...Alpine.store('pyui').nodes, ...result.nodes }};
+        }}
+
         if (result.reload) {{
           window.location.reload();
         }}
@@ -177,6 +212,7 @@ def _render_node(node: IRNode) -> str:
         "table": _render_table,
         "stat": _render_stat,
         "chart": _render_chart,
+        "list": _render_list,
         "page": _render_page_node,  # page-root wrapper (unused normally)
     }
     renderer = dispatch.get(node.type)
@@ -188,6 +224,36 @@ def _render_node(node: IRNode) -> str:
             f"</div>"
         )
     html = renderer(node)
+
+    # Inject Alpine.js x-model for 2-way binding on inputs
+    if node.type in ["input", "textarea", "checkbox", "select", "toggle", "slider"]:
+        # If 'value' or 'checked' is bound to a single reactive var, use x-model
+        model_prop = "checked" if node.type in ["checkbox", "toggle"] else "value"
+        if model_prop in node.reactive_props and len(node.reactive_props[model_prop]) == 1:
+            var_name = node.reactive_props[model_prop][0]
+            # Find the first space after the opening tag to inject attributes
+            space_idx = html.find(" ")
+            if space_idx != -1:
+                html = (
+                    html[:space_idx]
+                    + f' x-model="$store.pyui.state.{var_name}" '
+                    + f'@input="__pyuiEvent(\'update_state\', {{ \'{var_name}\': $el.{model_prop} }})"'
+                    + html[space_idx:]
+                )
+
+    # Inject Alpine.js directives for shared reactive properties (hidden, disabled)
+    if node.reactive_props:
+        # Find the first space after the opening tag to inject attributes
+        space_idx = html.find(" ")
+        if space_idx != -1:
+            directives = []
+            if "hidden" in node.reactive_props:
+                directives.append(f'x-show="!$store.pyui.nodes[\'{node.node_id}\']?.hidden"')
+            if "disabled" in node.reactive_props:
+                directives.append(f'x-bind:disabled="$store.pyui.nodes[\'{node.node_id}\']?.disabled"')
+            
+            if directives:
+                html = html[:space_idx] + " " + " ".join(directives) + html[space_idx:]
 
     # Inject custom CSS classes if any are defined for the node
     custom_class = node.props.get("class_name", "").strip()
@@ -253,7 +319,12 @@ def _render_text(node: IRNode) -> str:
     )
 
     # For now, we rely on page reloads for reactivity in Phase 1.
-    return f'<{element} id="{node.node_id}" class="{classes}">{safe}</{element}>'
+    # Phase 3 Update: Use Alpine x-text for reactive content
+    reactive_attr = ""
+    if "content" in node.reactive_props:
+        reactive_attr = f' x-text="$store.pyui.nodes[\'{node.node_id}\']?.content"'
+
+    return f'<{element} id="{node.node_id}" class="{classes}"{reactive_attr}>{safe}</{element}>'
 
 
 def _render_heading(node: IRNode) -> str:
@@ -1065,6 +1136,14 @@ def _render_chart(node: IRNode) -> str:
     )
 
 
+def _render_list(node: IRNode) -> str:
+    """Render a list of items."""
+    # List children are pre-built by the IR builder if render_fn is provided
+    # or they can be simple children added via .add()
+    inner = "\n".join(f"  {_render_node(child)}" for child in node.children)
+    return f'<div id="{node.node_id}" class="space-y-4">\n{inner}\n</div>'
+
+
 def _render_page_node(node: IRNode) -> str:
     """Fallback: render a page-root node by rendering its children."""
     return _children_html(node)
@@ -1096,8 +1175,27 @@ class WebGenerator:
 
         # Alpine x-data: dump reactive state as JSON
         state: dict[str, Any] = dict(self.ir_tree.reactive_vars)
-        alpine_data = json.dumps(state, default=str)
+        
+        # Collect initial state for reactive nodes on this page
+        node_state: dict[str, dict[str, Any]] = {}
+        def _collect(nodes: list[Any]) -> None:
+            for n in nodes:
+                if n.reactive_props:
+                    node_state[n.node_id] = {k: n.props.get(k) for k in n.reactive_props}
+                if n.children:
+                    _collect(n.children)
+        
+        _collect(ir_page.children)
+        
+        # Combined everything into a global state for the page
+        initial_alpine = {
+            "state": state,
+            "nodes": node_state
+        }
+        alpine_data = json.dumps(initial_alpine, default=str)
         state_json = json.dumps(state, default=str)
+        node_state_json = json.dumps(node_state, default=str)
+        persistent_vars_json = json.dumps(self.ir_tree.persistent_vars)
 
         favicon_tag = ""
         favicon = self.ir_tree.app_meta.get("favicon")
@@ -1116,6 +1214,8 @@ class WebGenerator:
             layout_class=layout_class,
             content=content,
             state_json=state_json,
+            node_state_json=node_state_json,
+            persistent_vars_json=persistent_vars_json,
         )
 
     def write_to_disk(self, output_dir: Path) -> None:

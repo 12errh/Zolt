@@ -1,4 +1,5 @@
 from pyui.components.base import BaseComponent
+from pyui.state.reactive import ReactiveVar
 
 
 class Select(BaseComponent):
@@ -9,7 +10,10 @@ class Select(BaseComponent):
     component_type = "select"
 
     def __init__(
-        self, options: list[tuple[str, str]], value: str | None = None, label: str | None = None
+        self,
+        options: list[tuple[str, str]] | None = None,
+        value: str | ReactiveVar[str] | None = None,
+        label: str | None = None,
     ) -> None:
         super().__init__()
         self.props.update(

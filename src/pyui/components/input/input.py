@@ -1,4 +1,5 @@
 from pyui.components.base import BaseComponent
+from pyui.state.reactive import ReactiveVar
 
 
 class Input(BaseComponent):
@@ -10,7 +11,7 @@ class Input(BaseComponent):
 
     def __init__(
         self,
-        value: str = "",
+        value: str | ReactiveVar[str] = "",
         placeholder: str = "",
         type: str = "text",
         label: str | None = None,
