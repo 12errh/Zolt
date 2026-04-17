@@ -152,10 +152,10 @@ _PAGE_TEMPLATE = """\
     html {{ scroll-behavior: smooth; }}
 
     /* Custom scrollbar */
-    ::-webkit-scrollbar {{ width: 8px; }}
+    ::-webkit-scrollbar {{ width: 6px; }}
     ::-webkit-scrollbar-track {{ background: transparent; }}
-    ::-webkit-scrollbar-thumb {{ background: #888; border-radius: 4px; }}
-    ::-webkit-scrollbar-thumb:hover {{ background: #555; }}
+    ::-webkit-scrollbar-thumb {{ background: #d1d5db; border-radius: 99px; }}
+    ::-webkit-scrollbar-thumb:hover {{ background: #9ca3af; }}
 
     /* Animation utility classes */
     .animate-on-scroll {{
@@ -245,12 +245,20 @@ _PAGE_TEMPLATE = """\
                   border-color 0.7s cubic-bezier(0.16, 1, 0.3, 1);
     }}
 
+    /* Shimmer for skeleton */
+    @keyframes shimmer {{
+      100% {{ transform: translateX(100%); }}
+    }}
+
+    /* Selection */
+    ::selection {{ background: #ede9fe; color: #4c1d95; }}
+
     {css_vars}
     {extra_css}
   </style>
   {favicon_tag}
 </head>
-<body class="bg-gray-50 text-gray-900 min-h-screen antialiased theme-transition"
+<body class="bg-white text-gray-900 min-h-screen antialiased theme-transition"
       x-data='{{alpine_data}}'
       x-init="lucide.createIcons();
               window.__pyuiPersistentVars.forEach(key => {{
@@ -757,7 +765,11 @@ def _render_video(node: IRNode) -> str:
 def _render_label(node_id: str, text: str | None) -> str:
     if not text:
         return ""
-    return f'<label for="{node_id}" class="block text-sm font-medium text-gray-700 mb-1">{html_module.escape(text)}</label>'
+    return (
+        f'<label for="{node_id}" '
+        f'class="block text-sm font-medium text-gray-700 mb-1.5 tracking-tight">'
+        f'{html_module.escape(text)}</label>'
+    )
 
 
 def _render_input(node: IRNode) -> str:

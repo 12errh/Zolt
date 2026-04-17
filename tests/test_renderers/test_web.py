@@ -60,12 +60,12 @@ def test_page_title_in_html() -> None:
 
 
 def test_button_primary_has_bg_class() -> None:
-    """Primary Button must contain bg-violet Tailwind classes."""
+    """Primary Button must render with a background class."""
     from pyui import Button
     from pyui.renderers.web import render_component
 
     html = render_component(Button("Go").style("primary"))
-    assert "bg-violet" in html
+    assert "bg-gray-950" in html
 
 
 def test_button_danger_variant() -> None:
