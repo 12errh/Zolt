@@ -62,13 +62,14 @@ from pyui.state.reactive import reactive
 from pyui.state.store import store
 
 __all__ = [
+    # Core
     "App",
     "Page",
     "reactive",
     "computed",
     "store",
     "BaseComponent",
-    "# Layout",
+    # Layout
     "Container",
     "Divider",
     "Flex",
@@ -78,7 +79,7 @@ __all__ = [
     "Spacer",
     "Split",
     "Stack",
-    "# Display",
+    # Display
     "Avatar",
     "Badge",
     "Heading",
@@ -88,7 +89,7 @@ __all__ = [
     "RawHTML",
     "Tag",
     "Text",
-    "# Input",
+    # Input
     "Button",
     "Checkbox",
     "DatePicker",
@@ -100,7 +101,7 @@ __all__ = [
     "Slider",
     "Textarea",
     "Toggle",
-    "# Feedback",
+    # Feedback
     "Alert",
     "Drawer",
     "Modal",
@@ -109,16 +110,16 @@ __all__ = [
     "Spinner",
     "Toast",
     "Tooltip",
-    "# Data",
+    # Data
     "Chart",
     "Stat",
     "Table",
-    "# Navigation",
+    # Navigation
     "Nav",
     "Tabs",
     "Breadcrumb",
     "Pagination",
     "Menu",
-    "# Media",
+    # Media
     "Video",
 ]

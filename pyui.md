@@ -1,7 +1,7 @@
 # PyUI — Product & Technical Requirements Document
 
 **Version:** 0.1.0  
-**Status:** Stable (Phase 2 Complete)  
+**Status:** Phase 3 Complete — Phase 3.5 Stabilization In Progress  
 **Author:** PyUI Core Team  
 **Last Updated:** April 2026
 
@@ -28,6 +28,13 @@
    - 3.6 Component Marketplace
    - 3.7 CLI Toolchain
    - 3.8 Hot Reload System
+4. [**Phase 3.5 — Stabilization & Foundation Hardening**](#phase-35--stabilization--foundation-hardening) ← **CURRENT**
+5. [Development Phases](#5-development-phases)
+6. [Unit Test Plan — Per Phase](#6-unit-test-plan--per-phase)
+7. [File & Folder Structure](#7-file--folder-structure)
+8. [Dependencies & Third-Party Libraries](#8-dependencies--third-party-libraries)
+9. [Risks & Mitigations](#9-risks--mitigations)
+10. [Glossary](#10-glossary)
    - 3.9 Plugin System
    - 3.10 Performance Requirements
    - 3.11 Security Requirements
@@ -1781,3 +1788,253 @@ pyui/
 ---
 
 *PyUI PRD + TRD v1.0.0 — This document is a living specification. Update version and changelog on every significant change.*
+
+---
+
+## Phase 3.5 — Stabilization & Foundation Hardening
+
+**Status:** 🚧 In Progress  
+**Goal:** Make every existing feature production-reliable before adding new targets. No new features — only correctness, consistency, test coverage, and developer experience.
+
+This phase exists because Phases 0–3 moved fast. The foundation is solid but has rough edges: inconsistent styling tokens, missing test coverage on renderers, a broken `__all__` export, storybook layout issues, and no formal contract for what "production-ready" means for each component. Phase 3.5 closes all of that before Phase 4 begins.
+
+---
+
+### 3.5.1 — Full Audit Results (April 2026)
+
+The following issues were identified during the Phase 3.5 audit:
+
+#### Critical Bugs Fixed
+| # | Issue | File | Fix |
+|---|---|---|---|
+| 1 | `__all__` contained comment strings (`"# Layout"`) causing `from pyui import *` to crash with `AttributeError` | `src/pyui/__init__.py` | Replaced string comments with real Python comments |
+| 2 | `Tabs.add_tab()` stored raw `BaseComponent` children; renderer called `_render_node()` on them directly, crashing with `AttributeError: 'Text' object has no attribute 'type'` | `src/pyui/renderers/web/generator.py` | Added `isinstance(child, IRNode)` guard — converts `BaseComponent` to `IRNode` before rendering |
+| 3 | Shimmer keyframe only had `100%` stop — animation never played | `src/pyui/renderers/web/generator.py` | Fixed to `0% → 100%` |
+| 4 | Radio input used hardcoded `text-violet-600` / `focus:ring-violet-500` — inconsistent with new design system | `src/pyui/renderers/web/generator.py` | Updated to `text-gray-900` / `focus:ring-gray-900/20` |
+| 5 | Form title used `text-lg font-medium` — inconsistent with design system | `src/pyui/renderers/web/generator.py` | Updated to `text-base font-semibold tracking-tight` |
+| 6 | Alert icon used `mr-3` margin — inconsistent with gap-based layout | `src/pyui/renderers/web/generator.py` | Replaced with `alert-icon` class, gap handled by parent flex |
+
+#### Design System Issues Fixed
+| # | Issue | Fix |
+|---|---|---|
+| 7 | Button primary used `bg-violet-600` — not aligned with premium design direction | Redesigned to `bg-gray-950` with `active:scale-[0.97]` |
+| 8 | All inputs used `rounded-md` — inconsistent with card `rounded-2xl` | Updated to `rounded-xl` across all inputs |
+| 9 | `full-width` page layout had `px-4 py-8` padding — broke full-bleed designs | Removed padding, now `w-full` only |
+| 10 | Container missing `6xl` size for wide layouts | Added `max-w-[1400px]` as `6xl` |
+| 11 | Skeleton used `animate-pulse` — generic, not premium | Replaced with shimmer animation via `before:` pseudo-element |
+| 12 | Progress bar used flat `bg-violet-600` | Replaced with `bg-gradient-to-r from-gray-700 to-gray-900` |
+
+#### Storybook Issues Fixed
+| # | Issue | Fix |
+|---|---|---|
+| 13 | Sidebar had `min-h-screen` but no `h-screen sticky` — didn't stay fixed while scrolling | Changed to `h-screen sticky top-0 overflow-y-auto self-start` |
+| 14 | Main content had no max-width — stretched to full viewport on wide screens | Added `max-w-5xl` cap on content area |
+| 15 | Sidebar nav items had `px-5` — too much padding for 220px sidebar | Reduced to `px-4` |
+| 16 | No active state on sidebar links while scrolling | Added GSAP + IntersectionObserver scroll-spy with `.sb-active` CSS class |
+| 17 | Spinner section showed spinners but they appeared static | Fixed by showing all 5 sizes explicitly with `Spinner(size=...)` |
+
+---
+
+### 3.5.2 — Remaining Stabilization Tasks
+
+These tasks must be completed before Phase 4 begins. Each has a clear acceptance criterion.
+
+#### T1 — Test Coverage: Renderer
+**Priority:** High  
+**Status:** Pending
+
+The renderer has 0 tests for most components. Add a test for every `_render_*` function.
+
+Acceptance criteria:
+- Every component in the dispatch table has at least one render test
+- Tests verify: HTML is non-empty, key attributes are present, no exceptions thrown
+- Coverage on `generator.py` reaches ≥ 80%
+
+```python
+# Example test pattern
+def test_render_alert_info():
+    from pyui import Alert
+    from pyui.renderers.web import render_component
+    html = render_component(Alert("Title", "Body", variant="info"))
+    assert "role=\"alert\"" in html
+    assert "Title" in html
+    assert "border-l-sky-500" in html
+
+def test_render_spinner_sizes():
+    from pyui import Spinner
+    from pyui.renderers.web import render_component
+    for size in ["xs", "sm", "md", "lg", "xl"]:
+        html = render_component(Spinner(size=size))
+        assert "animate-spin" in html
+        assert f"h-" in html
+```
+
+#### T2 — Test Coverage: State System
+**Priority:** High  
+**Status:** Pending
+
+The state system (`reactive`, `computed`, `store`) has minimal tests. Add edge case coverage.
+
+Acceptance criteria:
+- `ReactiveVar` arithmetic operators tested
+- `ComputedVar` dependency re-tracking tested (conditional deps)
+- `Store` duplicate key error tested
+- `persist=True` flag tested (IR includes var in `persistent_vars`)
+- Thread-safety note documented (not thread-safe — single-user dev server only)
+
+#### T3 — Test Coverage: Compiler IR
+**Priority:** Medium  
+**Status:** Partial (discovery + basic IR tests exist)
+
+Acceptance criteria:
+- `build_ir_node` tested for every component type
+- Reactive lambda resolution tested
+- `ReactiveVar` direct prop binding tested
+- Event handler registration and retrieval tested
+- `build_ir_tree` tested with multi-page App
+
+#### T4 — Component API Consistency Audit
+**Priority:** High  
+**Status:** Pending
+
+Every component must follow the same API contract. Current inconsistencies:
+
+| Component | Issue | Fix |
+|---|---|---|
+| `Spinner` | Constructor param is `size` but prop stored as `spinner_size` — confusing | Document clearly, add `size()` chainable method |
+| `Avatar` | `src()` and `name()` methods shadow constructor params | Rename chainable methods to `set_src()` / `set_name()` or remove duplicates |
+| `Chart` | `line()`, `bar()`, `pie()` methods exist but constructor also takes `type=` | Remove redundant methods, keep constructor param only |
+| `Skeleton` | No constructor param for `variant` — must use `Skeleton(variant="circle")` but `variant` is not in `__init__` signature | Add `variant` to `__init__` signature |
+| `Badge` | Constructor takes `variant` as second positional arg — inconsistent with other components that use `.style()` | Keep for now, document as intentional shorthand |
+| `Form` | `title` is a constructor param but `Form` is also a context manager — title renders as `h3` inside the form | Consistent, document it |
+
+#### T5 — `pyui new` Command Implementation
+**Priority:** Medium  
+**Status:** Stub only
+
+The `pyui new <name>` command currently prints a placeholder message. Implement the minimal scaffold.
+
+Acceptance criteria:
+- Creates a directory with `app.py`, `requirements.txt`, `README.md`
+- `app.py` contains a working `App` + `Page` + `Button` example
+- `pyui run` works immediately after `pyui new`
+- `--template blank` (default) works
+- `--template dashboard` creates a 3-page app with Nav, Stats, Table
+
+#### T6 — Hot Reload WebSocket (Partial)
+**Priority:** Medium  
+**Status:** Stub (WebSocket connects but sends only `{"type": "connected"}`)
+
+Implement file-watching hot reload for the web target.
+
+Acceptance criteria:
+- `watchdog` monitors the user's app file for changes
+- On change: re-runs `build_ir_tree`, diffs against previous IR
+- Sends `{"type": "reload"}` via WebSocket to connected browsers
+- Browser JS receives message and calls `window.location.reload()`
+- Full DOM-patch diffing is Phase 6 — simple full reload is acceptable here
+
+#### T7 — Storybook: Production-Quality Redesign
+**Priority:** High  
+**Status:** In Progress
+
+The storybook must be the definitive showcase of PyUI's quality. It is the first thing a new user sees.
+
+Acceptance criteria:
+- Every component is shown with all its variants and states
+- Preview cards have consistent label bars with variant hints
+- Sidebar scroll-spy works correctly (active link highlighted as you scroll)
+- GSAP entrance animations fire on scroll for all preview cards
+- Spinner, Progress, and Skeleton all visually work correctly
+- No raw HTML (`RawHTML`, `inject_html`) used anywhere in storybook
+- Renders in < 500ms
+- No layout overflow or spacing issues at 1280px, 1440px, 1920px viewport widths
+
+#### T8 — `pyui doctor` Enhancements
+**Priority:** Low  
+**Status:** Partial
+
+Current `pyui doctor` only checks Python version. Extend it.
+
+Acceptance criteria:
+- Checks Python >= 3.10
+- Checks all required dependencies are installed and at correct versions
+- Checks port 8000 is available
+- Checks `watchdog` is installed (needed for hot reload)
+- Reports PyUI version and latest available version from PyPI
+
+#### T9 — AGENT_CONTEXT.md Sync
+**Priority:** Low  
+**Status:** Pending
+
+`AGENT_CONTEXT.md` must reflect all Phase 3.5 changes.
+
+Acceptance criteria:
+- Phase 3.5 section added with all bug fixes documented
+- Known gaps section updated
+- Component API inconsistencies documented
+
+---
+
+### 3.5.3 — Definition of Done for Phase 3.5
+
+Phase 3.5 is complete when ALL of the following are true:
+
+- [ ] All 9 tasks above are marked complete
+- [ ] `python -m pytest tests/ -q` shows **0 failures**
+- [ ] `ruff check src/` shows **0 errors**
+- [ ] `mypy src/` shows **0 errors** (strict mode)
+- [ ] `from pyui import *` works without any `AttributeError`
+- [ ] `pyui storybook` renders without errors and looks premium
+- [ ] `pyui run app.py` works on a fresh `pip install -e .`
+- [ ] `pyui new my-app && cd my-app && pyui run` works end-to-end
+- [ ] Every component in `__all__` renders without exception
+- [ ] Renderer test coverage ≥ 80%
+- [ ] No `RawHTML` or `inject_html` in storybook or any example file
+- [ ] `AGENT_CONTEXT.md` is up to date
+
+---
+
+### 3.5.4 — What Phase 3.5 Does NOT Include
+
+To keep scope tight, the following are explicitly deferred to Phase 4+:
+
+- Desktop renderer (Phase 4)
+- CLI/TUI renderer (Phase 4)
+- Hot reload DOM diffing (Phase 6)
+- Component marketplace (Phase 5)
+- `pyui build` static export improvements (Phase 6)
+- i18n / accessibility audit (Phase 7)
+- Performance profiling (Phase 7)
+
+---
+
+### 3.5.5 — Phase 3.5 Progress Tracker
+
+| Task | Owner | Status | Notes |
+|---|---|---|---|
+| T1 — Renderer test coverage | — | 🔴 Not started | Priority: start here |
+| T2 — State system tests | — | 🟡 Partial | Basic tests exist |
+| T3 — Compiler IR tests | — | 🟡 Partial | discovery + basic IR done |
+| T4 — Component API audit | — | 🟡 In progress | Issues documented above |
+| T5 — `pyui new` implementation | — | 🔴 Not started | |
+| T6 — Hot reload WebSocket | — | 🔴 Not started | Simple reload only |
+| T7 — Storybook redesign | — | 🟡 In progress | Layout fixed, needs polish |
+| T8 — `pyui doctor` enhancements | — | 🔴 Not started | Low priority |
+| T9 — AGENT_CONTEXT.md sync | — | 🔴 Not started | Do last |
+
+**Legend:** 🔴 Not started · 🟡 In progress · 🟢 Complete
+
+---
+
+### 3.5.6 — Entry Criteria for Phase 4
+
+Phase 4 (Desktop + CLI Renderers) begins only when:
+
+1. All Phase 3.5 tasks are 🟢 Complete
+2. The storybook passes the Definition of Done above
+3. A clean `pip install pyui-framework` + `pyui storybook` works on a fresh machine
+4. The IR tree is confirmed stable — no breaking changes to `IRNode`, `IRPage`, `IRTree` dataclasses
+5. At least one team member has done a full end-to-end test: `pyui new` → `pyui run` → `pyui build`
+
+---

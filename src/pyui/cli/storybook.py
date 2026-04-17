@@ -87,11 +87,11 @@ class StorybookPage(Page):
     def _sidebar(self) -> None:
         with Flex(direction="col", align="start", gap=0).className(
             "w-[220px] flex-shrink-0 bg-white border-r border-gray-100 "
-            "min-h-screen sticky top-0 h-screen overflow-y-auto"
+            "h-screen sticky top-0 overflow-y-auto self-start"
         ):
             # Logo
             with Flex(align="center", gap=2).className(
-                "px-4 py-4 border-b border-gray-100"
+                "px-4 py-4 border-b border-gray-100 flex-shrink-0"
             ):
                 with Flex(align="center", justify="center").className(
                     "w-7 h-7 bg-gray-950 rounded-lg flex-shrink-0"
@@ -121,22 +121,15 @@ class StorybookPage(Page):
                         Icon(icon, size=13)
                         Text(label).className("text-[13px] leading-none")
 
-            # Bottom version badge
-            Spacer()
-            with Flex(align="center", justify="center").className(
-                "px-4 py-4 border-t border-gray-100 mt-auto"
-            ):
-                Badge("v0.1.0", variant="secondary")
-
     # =========================================================
     # MAIN — zero side padding on wrapper, sections handle own padding
     # =========================================================
     def _main(self) -> None:
-        with Flex(direction="col", gap=0).className("flex-1 min-w-0"):
+        with Flex(direction="col", gap=0).className("flex-1 min-w-0 min-h-screen"):
             # Sticky top bar
             with Flex(align="center", justify="between").className(
-                "sticky top-0 z-10 bg-white/90 backdrop-blur-sm "
-                "border-b border-gray-100 px-8 py-3"
+                "sticky top-0 z-10 bg-white/95 backdrop-blur-sm "
+                "border-b border-gray-100 px-8 py-3 flex-shrink-0"
             ):
                 with Flex(align="center", gap=3):
                     Heading("Component Gallery", level=3)
@@ -146,8 +139,10 @@ class StorybookPage(Page):
                     Badge("Alpine.js", variant="dark")
                     Badge("Tailwind", variant="dark")
 
-            # Content area
-            with Flex(direction="col", gap=0).className("px-8 py-8 pb-24"):
+            # Content — max-width so it doesn't stretch on ultra-wide
+            with Flex(direction="col", gap=0).className(
+                "px-8 py-8 pb-24 w-full max-w-5xl"
+            ):
                 # Hero
                 with Flex(direction="col", gap=2).className(
                     "mb-10 gsap-fade-up"

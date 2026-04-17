@@ -957,14 +957,16 @@ def _render_radio_group(node: IRNode) -> str:
         checked = " checked" if val == selected_val else ""
         opt_id = f"{group_name}-{val}"
         radios.append(
-            f'  <div class="flex items-center">\n'
-            f'    <input id="{opt_id}" name="{group_name}" type="radio" value="{html_module.escape(val)}" class="h-4 w-4 border-gray-300 text-violet-600 focus:ring-violet-500"{checked}>\n'
-            f'    <label for="{opt_id}" class="ml-3 block text-sm font-medium text-gray-700">{html_module.escape(label)}</label>\n'
+            f'  <div class="flex items-center gap-2.5">\n'
+            f'    <input id="{opt_id}" name="{group_name}" type="radio" value="{html_module.escape(val)}" '
+            f'class="h-4 w-4 border-gray-300 text-gray-900 focus:ring-gray-900/20 cursor-pointer"{checked}>\n'
+            f'    <label for="{opt_id}" class="text-sm font-medium text-gray-700 cursor-pointer">'
+            f"{html_module.escape(label)}</label>\n"
             f"  </div>"
         )
 
     inner = "\n".join(radios)
-    return f'<div>\n  {label_html}\n  <div class="space-y-4">\n{inner}\n  </div>\n</div>'
+    return f'<div>\n  {label_html}\n  <div class="space-y-3">\n{inner}\n  </div>\n</div>'
 
 
 def _render_toggle(node: IRNode) -> str:
@@ -1050,7 +1052,8 @@ def _render_form(node: IRNode) -> str:
     )
 
     header = (
-        f'<h3 class="text-lg font-medium text-gray-900 mb-4">{html_module.escape(title)}</h3>'
+        f'<h3 class="text-base font-semibold text-gray-900 tracking-tight mb-5">'
+        f"{html_module.escape(title)}</h3>"
         if title
         else ""
     )
@@ -1073,11 +1076,15 @@ def _render_alert(node: IRNode) -> str:
     if show_icon:
         icon_name = {
             "success": "check-circle",
-            "danger": "alert-circle",
+            "danger":  "alert-circle",
             "warning": "alert-triangle",
-            "info": "info",
+            "info":    "info",
         }.get(node.style_variant or "info", "info")
-        icon_html = f'<div class="flex-shrink-0 mr-3"><i data-lucide="{icon_name}" class="h-5 w-5"></i></div>'
+        icon_html = (
+            f'<div class="flex-shrink-0">'
+            f'<i data-lucide="{icon_name}" class="h-4 w-4 alert-icon"></i>'
+            f"</div>"
+        )
 
     desc_html = f'<div class="mt-1 text-sm opacity-90">{description}</div>' if description else ""
 
