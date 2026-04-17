@@ -1180,7 +1180,10 @@ def _render_tabs(node: IRNode) -> str:
         )
 
         # Build children HTML for the panel
-        children_html = "\n".join(f"      {_render_node(child)}" for child in tab["children"])
+        children_html = "\n".join(
+            f"      {_render_node(build_ir_node(child) if not isinstance(child, IRNode) else child)}"
+            for child in tab["children"]
+        )
         tab_contents.append(
             f"    <div x-show=\"selected === '{label}'\" x-transition>\n{children_html}\n    </div>"
         )
