@@ -127,6 +127,11 @@ _PAGE_TEMPLATE = """\
   <!-- Icons: Lucide -->
   <script src="https://unpkg.com/lucide@latest"></script>
 
+  <!-- GSAP (GreenSock Animation Platform) -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollToPlugin.min.js"></script>
+
   <!-- Markdown: Marked -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
@@ -247,11 +252,25 @@ _PAGE_TEMPLATE = """\
 
     /* Shimmer for skeleton */
     @keyframes shimmer {{
+      0% {{ transform: translateX(-100%); }}
       100% {{ transform: translateX(100%); }}
     }}
 
     /* Selection */
     ::selection {{ background: #ede9fe; color: #4c1d95; }}
+
+    /* GSAP entrance helpers */
+    .gsap-fade-up {{ opacity: 0; transform: translateY(32px); }}
+    .gsap-fade-in {{ opacity: 0; }}
+    .gsap-scale-in {{ opacity: 0; transform: scale(0.94); }}
+
+    /* Storybook scroll-spy active state */
+    .sb-nav-link.sb-active {{
+      color: #111827 !important;
+      background: #f3f4f6 !important;
+      border-left-color: #111827 !important;
+      font-weight: 600;
+    }}
 
     {css_vars}
     {extra_css}
@@ -337,6 +356,89 @@ _PAGE_TEMPLATE = """\
         console.error('[PyUI] Event error:', e);
       }}
     }}
+  </script>
+
+  <!-- GSAP init -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {{
+      if (typeof gsap === 'undefined') return;
+
+      gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
+
+      // Entrance animations for .gsap-fade-up elements
+      gsap.utils.toArray('.gsap-fade-up').forEach((el, i) => {{
+        gsap.to(el, {{
+          opacity: 1,
+          y: 0,
+          duration: 0.7,
+          delay: i * 0.05,
+          ease: 'power3.out',
+          scrollTrigger: {{
+            trigger: el,
+            start: 'top 92%',
+            toggleActions: 'play none none none',
+          }},
+        }});
+      }});
+
+      // Entrance for .gsap-fade-in
+      gsap.utils.toArray('.gsap-fade-in').forEach((el, i) => {{
+        gsap.to(el, {{
+          opacity: 1,
+          duration: 0.6,
+          delay: i * 0.04,
+          ease: 'power2.out',
+          scrollTrigger: {{
+            trigger: el,
+            start: 'top 94%',
+            toggleActions: 'play none none none',
+          }},
+        }});
+      }});
+
+      // Scale-in for cards
+      gsap.utils.toArray('.gsap-scale-in').forEach((el, i) => {{
+        gsap.to(el, {{
+          opacity: 1,
+          scale: 1,
+          duration: 0.5,
+          delay: i * 0.06,
+          ease: 'back.out(1.4)',
+          scrollTrigger: {{
+            trigger: el,
+            start: 'top 93%',
+            toggleActions: 'play none none none',
+          }},
+        }});
+      }});
+
+      // Storybook scroll-spy: highlight active sidebar link by id
+      const sbLinks = document.querySelectorAll('.sb-nav-link');
+      const sbSections = [];
+      sbLinks.forEach(link => {{
+        const anchor = link.id.replace('sb-link-', '');
+        const el = document.getElementById(anchor);
+        if (el) sbSections.push(el);
+      }});
+
+      if (sbSections.length) {{
+        const spy = new IntersectionObserver((entries) => {{
+          entries.forEach(entry => {{
+            if (entry.isIntersecting) {{
+              const id = entry.target.id;
+              sbLinks.forEach(link => {{
+                const isActive = link.id === 'sb-link-' + id;
+                link.classList.toggle('sb-active', isActive);
+                if (isActive) {{
+                  link.scrollIntoView({{ block: 'nearest', behavior: 'smooth' }});
+                }}
+              }});
+            }}
+          }});
+        }}, {{ threshold: 0.15, rootMargin: '-5% 0px -65% 0px' }});
+        sbSections.forEach(s => spy.observe(s));
+      }}
+    }});
   </script>
 </body>
 </html>
