@@ -10,6 +10,7 @@ from pyui.components.display import (
     Icon,
     Image,
     Markdown,
+    RawHTML,
     Tag,
     Text,
 )
@@ -84,6 +85,7 @@ __all__ = [
     "Icon",
     "Image",
     "Markdown",
+    "RawHTML",
     "Tag",
     "Text",
     "# Input",

@@ -110,6 +110,7 @@ class PyUIDevServer:
                 import inspect
 
                 from pyui.state.reactive import ReactiveVar
+
                 for attr_name, new_val in updates.items():
                     for name, value in inspect.getmembers(self.app_class):
                         if name == attr_name and isinstance(value, ReactiveVar):
@@ -169,9 +170,7 @@ class PyUIDevServer:
             content_type="application/json",
         )
 
-    def _collect_node_updates(
-        self, nodes: list[Any], updates: dict[str, dict[str, Any]]
-    ) -> None:
+    def _collect_node_updates(self, nodes: list[Any], updates: dict[str, dict[str, Any]]) -> None:
         # Collect initial state for reactive nodes on this page
         def _collect(nodes: list[Any]) -> None:
             for n in nodes:
@@ -179,7 +178,7 @@ class PyUIDevServer:
                     updates[n.node_id] = {k: n.props.get(k) for k in n.reactive_props}
                 if n.children:
                     _collect(n.children)
-        
+
         _collect(nodes)
 
     async def _handle_ws(self, request: web.Request) -> web.WebSocketResponse:

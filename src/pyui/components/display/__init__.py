@@ -4,6 +4,7 @@ from pyui.components.display.heading import Heading
 from pyui.components.display.icon import Icon
 from pyui.components.display.image import Image
 from pyui.components.display.markdown import Markdown
+from pyui.components.display.rawhtml import RawHTML
 from pyui.components.display.tag import Tag
 from pyui.components.display.text import Text
 
@@ -14,6 +15,7 @@ __all__ = [
     "Icon",
     "Image",
     "Markdown",
+    "RawHTML",
     "Tag",
     "Text",
 ]

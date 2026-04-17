@@ -63,6 +63,17 @@ class Text(BaseComponent):
         self.props["truncate"] = enabled
         return self
 
+    def inject_html(self, html: str) -> Text:
+        """
+        Inject raw HTML content into this Text component.
+
+        This is an escape hatch for injecting raw HTML/CSS/JS.
+        Warning: Only use with trusted content to avoid XSS attacks.
+        """
+        self.props["inject_html"] = html
+        self.props["is_raw_html"] = True
+        return self
+
     def __repr__(self) -> str:
         content = self.props["content"]
         display = content if isinstance(content, str) else "<reactive>"

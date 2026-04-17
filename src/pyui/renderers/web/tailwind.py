@@ -581,7 +581,7 @@ def chart_container_classes() -> str:
 
 PAGE_LAYOUT_CLASSES: dict[str, str] = {
     "default": "container mx-auto px-4 py-8 max-w-7xl",
-    "full-width": "w-full px-4 py-8",
+    "full-width": "w-full",
     "sidebar": "flex gap-6 px-4 py-8 max-w-7xl mx-auto",
     "auth": "min-h-screen flex items-center justify-center bg-gray-50 px-4",
 }

@@ -83,7 +83,9 @@ class IRNode:
     children: list[IRNode] = field(default_factory=list)
     events: dict[str, str] = field(default_factory=dict)
     reactive_bindings: list[str] = field(default_factory=list)
-    reactive_props: dict[str, list[str]] = field(default_factory=dict)  # prop_name -> list of dependencies
+    reactive_props: dict[str, list[str]] = field(
+        default_factory=dict
+    )  # prop_name -> list of dependencies
     style_variant: str | None = None
     theme_tokens: dict[str, str] = field(default_factory=dict)
     node_id: str = field(default_factory=lambda: f"pyui-{uuid.uuid4().hex[:8]}")
@@ -158,20 +160,21 @@ def build_ir_node(component: BaseComponent, path: str | None = None) -> IRNode:
     # resolve it now and mark that this node is reactive.
     from pyui.state.reactive import _REACTIVE_CONTEXT, ReactiveVar, get_reactive_name
 
+    is_reactive = False
     for key, val in props_copy.items():
         if isinstance(val, ReactiveVar):
             name = get_reactive_name(val)
             if name:
                 reactive_bindings.append(name)
                 reactive_props[key] = [name]
-                props_copy["is_reactive"] = True
+                is_reactive = True
             props_copy[key] = val.get()
         elif callable(val) and not isinstance(val, type):
             _REACTIVE_CONTEXT.append(set())
             try:
                 resolved_val = val()
                 touched = _REACTIVE_CONTEXT.pop()
-                
+
                 # In Phase 3, we track specific dependencies.
                 # But for existing tests, we mark any lambda as reactive.
                 prop_deps = []
@@ -181,11 +184,11 @@ def build_ir_node(component: BaseComponent, path: str | None = None) -> IRNode:
                         prop_deps.append(name)
                         if name not in reactive_bindings:
                             reactive_bindings.append(name)
-                
+
                 # If no specific reactive vars were touched, we still mark the prop as reactive
                 # so the renderer knows it came from a lambda.
                 reactive_props[key] = prop_deps
-                props_copy["is_reactive"] = True
+                is_reactive = True
                 if key not in reactive_bindings:
                     reactive_bindings.append(key)
 
@@ -196,20 +199,24 @@ def build_ir_node(component: BaseComponent, path: str | None = None) -> IRNode:
                 # If resolution fails during build, use a safe default
                 props_copy[key] = ""
 
+    if is_reactive:
+        props_copy["is_reactive"] = True
+
     # Recursively build slots (any prop that is a BaseComponent or list of BaseComponents)
     from pyui.components.base import BaseComponent
+
     for key, val in props_copy.items():
         if isinstance(val, BaseComponent):
             props_copy[key] = build_ir_node(val, f"{path}-{key}" if path else None)
         elif isinstance(val, list) and val and isinstance(val[0], BaseComponent):
             props_copy[key] = [
-                build_ir_node(item, f"{path}-{key}-{i}" if path else None) 
+                build_ir_node(item, f"{path}-{key}-{i}" if path else None)
                 for i, item in enumerate(val)
             ]
 
     # Recursively build children
     children = [
-        build_ir_node(child, f"{path}-{i}" if path else None) 
+        build_ir_node(child, f"{path}-{i}" if path else None)
         for i, child in enumerate(component.children)
     ]
 
@@ -296,7 +303,9 @@ def build_ir_tree(app_class: type[App]) -> IRTree:
             "favicon": app_class.favicon,
         },
         pages=pages,
-        theme=app_class.theme,
+        theme=app_class.theme.get()
+        if isinstance(app_class.theme, ReactiveVar)
+        else app_class.theme,
         reactive_vars=reactive_vars,
         event_handlers=dict(_handler_registry),
         persistent_vars=persistent_vars,

@@ -29,6 +29,7 @@ def get_reactive_name(var: ReactiveVar[Any]) -> str | None:
     """Retrieve the name of a ReactiveVar."""
     return REACTIVE_VAR_REGISTRY.get(var)
 
+
 T = TypeVar("T")
 
 

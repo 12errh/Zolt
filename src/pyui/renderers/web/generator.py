@@ -39,6 +39,81 @@ _PAGE_TEMPLATE = """\
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {{
+      darkMode: 'class',
+      theme: {{
+        extend: {{
+          colors: {{
+            brand: '#87B4A3',
+          }},
+          animation: {{
+            'fade-in': 'fadeIn 0.8s ease-out forwards',
+            'slide-up': 'slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'slide-down': 'slideDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'slide-in-left': 'slideInLeft 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'slide-in-right': 'slideInRight 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'scale-in': 'scaleIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'counter': 'counter 2s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'marquee': 'marquee 30s linear infinite',
+            'float': 'float 6s ease-in-out infinite',
+            'glow': 'glow 2s ease-in-out infinite alternate',
+            'text-reveal': 'textReveal 1s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'gradient-shift': 'gradientShift 8s ease infinite',
+          }},
+          keyframes: {{
+            fadeIn: {{
+              '0%': {{ opacity: '0' }},
+              '100%': {{ opacity: '1' }},
+            }},
+            slideUp: {{
+              '0%': {{ opacity: '0', transform: 'translateY(60px)' }},
+              '100%': {{ opacity: '1', transform: 'translateY(0)' }},
+            }},
+            slideDown: {{
+              '0%': {{ opacity: '0', transform: 'translateY(-40px)' }},
+              '100%': {{ opacity: '1', transform: 'translateY(0)' }},
+            }},
+            slideInLeft: {{
+              '0%': {{ opacity: '0', transform: 'translateX(-60px)' }},
+              '100%': {{ opacity: '1', transform: 'translateX(0)' }},
+            }},
+            slideInRight: {{
+              '0%': {{ opacity: '0', transform: 'translateX(60px)' }},
+              '100%': {{ opacity: '1', transform: 'translateX(0)' }},
+            }},
+            scaleIn: {{
+              '0%': {{ opacity: '0', transform: 'scale(0.9)' }},
+              '100%': {{ opacity: '1', transform: 'scale(1)' }},
+            }},
+            marquee: {{
+              '0%': {{ transform: 'translateX(0%)' }},
+              '100%': {{ transform: 'translateX(-50%)' }},
+            }},
+            float: {{
+              '0%, 100%': {{ transform: 'translateY(0px)' }},
+              '50%': {{ transform: 'translateY(-20px)' }},
+            }},
+            glow: {{
+              '0%': {{ boxShadow: '0 0 20px rgba(255, 79, 0, 0.3)' }},
+              '100%': {{ boxShadow: '0 0 40px rgba(255, 79, 0, 0.6)' }},
+            }},
+            textReveal: {{
+              '0%': {{ opacity: '0', transform: 'translateY(100%)', clipPath: 'inset(0 0 100% 0)' }},
+              '100%': {{ opacity: '1', transform: 'translateY(0)', clipPath: 'inset(0 0 0 0)' }},
+            }},
+            gradientShift: {{
+              '0%, 100%': {{ backgroundPosition: '0% 50%' }},
+              '50%': {{ backgroundPosition: '100% 50%' }},
+            }},
+          }},
+        }}
+      }}
+    }}
+  </script>
+
+  <!-- tailwindcss-animate plugin (CDN version) -->
+  <script src="https://cdn.jsdelivr.net/npm/tailwindcss-animate@0.1.1/dist/index.min.js"></script>
 
   <!-- Alpine.js -->
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
@@ -46,7 +121,7 @@ _PAGE_TEMPLATE = """\
   <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
         rel="stylesheet" />
 
   <!-- Icons: Lucide -->
@@ -60,19 +135,137 @@ _PAGE_TEMPLATE = """\
 
   <style>
     *, *::before, *::after {{ box-sizing: border-box; }}
-    body {{ font-family: 'Inter', system-ui, -apple-system, sans-serif; }}
+    body {{ margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }}
+
+    /* Prefers reduced motion */
+    @media (prefers-reduced-motion: reduce) {{
+      *, *::before, *::after {{
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }}
+      .animate-marquee {{ animation: none !important; }}
+    }}
+
+    /* Smooth scrolling */
+    html {{ scroll-behavior: smooth; }}
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {{ width: 8px; }}
+    ::-webkit-scrollbar-track {{ background: transparent; }}
+    ::-webkit-scrollbar-thumb {{ background: #888; border-radius: 4px; }}
+    ::-webkit-scrollbar-thumb:hover {{ background: #555; }}
+
+    /* Animation utility classes */
+    .animate-on-scroll {{
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }}
+    .animate-on-scroll.is-visible {{
+      opacity: 1;
+      transform: translateY(0);
+    }}
+    .animate-on-scroll.slide-left {{
+      transform: translateX(-60px);
+    }}
+    .animate-on-scroll.slide-left.is-visible {{
+      transform: translateX(0);
+    }}
+    .animate-on-scroll.slide-right {{
+      transform: translateX(60px);
+    }}
+    .animate-on-scroll.slide-right.is-visible {{
+      transform: translateX(0);
+    }}
+    .animate-on-scroll.scale {{
+      transform: scale(0.9);
+    }}
+    .animate-on-scroll.scale.is-visible {{
+      transform: scale(1);
+    }}
+
+    /* Stagger delays */
+    .stagger-1 {{ transition-delay: 0.1s; }}
+    .stagger-2 {{ transition-delay: 0.2s; }}
+    .stagger-3 {{ transition-delay: 0.3s; }}
+    .stagger-4 {{ transition-delay: 0.4s; }}
+    .stagger-5 {{ transition-delay: 0.5s; }}
+    .stagger-6 {{ transition-delay: 0.6s; }}
+
+    /* Magnetic button effect */
+    .magnetic-btn {{
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }}
+
+    /* 3D Tilt effect */
+    .tilt-card {{
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      transform-style: preserve-3d;
+      perspective: 1000px;
+    }}
+    .tilt-card:hover {{
+      transform: rotateX(2deg) rotateY(2deg);
+    }}
+
+    /* Gradient text animation */
+    .gradient-text {{
+      background-size: 200% 200%;
+      animation: gradientShift 8s ease infinite;
+    }}
+
+    /* Marquee container */
+    .marquee-container {{
+      overflow: hidden;
+      white-space: nowrap;
+    }}
+    .marquee-content {{
+      display: inline-flex;
+      animation: marquee 30s linear infinite;
+    }}
+    .marquee-content:hover {{
+      animation-play-state: paused;
+    }}
+
+    /* Counter animation */
+    @keyframes counterUp {{
+      from {{ opacity: 0; transform: translateY(20px); }}
+      to {{ opacity: 1; transform: translateY(0); }}
+    }}
+    .counter-animate {{
+      animation: counterUp 2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }}
+
+    /* Theme transition */
+    .theme-transition {{
+      transition: background-color 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+                  color 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+                  border-color 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }}
+
     {css_vars}
     {extra_css}
   </style>
   {favicon_tag}
 </head>
-<body class="bg-gray-50 text-gray-900 min-h-screen antialiased"
-      x-data='{alpine_data}'
+<body class="bg-gray-50 text-gray-900 min-h-screen antialiased theme-transition"
+      x-data='{{alpine_data}}'
       x-init="lucide.createIcons();
               window.__pyuiPersistentVars.forEach(key => {{
                 const saved = localStorage.getItem('pyui_state_' + key);
                 if (saved) Alpine.store('pyui').state[key] = JSON.parse(saved);
-              }});">
+              }});
+              // IntersectionObserver for scroll-triggered animations
+              const observer = new IntersectionObserver((entries) => {{
+                entries.forEach(entry => {{
+                  if (entry.isIntersecting) {{
+                    entry.target.classList.add('is-visible');
+                  }}
+                }});
+              }}, {{ threshold: 0.1, rootMargin: '0px 0px -50px 0px' }});
+              document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));">
 
   <!-- PyUI App -->
   <div id="pyui-app" class="{layout_class}">
@@ -213,6 +406,7 @@ def _render_node(node: IRNode) -> str:
         "stat": _render_stat,
         "chart": _render_chart,
         "list": _render_list,
+        "raw_html": _render_raw_html,
         "page": _render_page_node,  # page-root wrapper (unused normally)
     }
     renderer = dispatch.get(node.type)
@@ -237,7 +431,7 @@ def _render_node(node: IRNode) -> str:
                 html = (
                     html[:space_idx]
                     + f' x-model="$store.pyui.state.{var_name}" '
-                    + f'@input="__pyuiEvent(\'update_state\', {{ \'{var_name}\': $el.{model_prop} }})"'
+                    + f"@input=\"__pyuiEvent('update_state', {{ '{var_name}': $el.{model_prop} }})\""
                     + html[space_idx:]
                 )
 
@@ -248,10 +442,12 @@ def _render_node(node: IRNode) -> str:
         if space_idx != -1:
             directives = []
             if "hidden" in node.reactive_props:
-                directives.append(f'x-show="!$store.pyui.nodes[\'{node.node_id}\']?.hidden"')
+                directives.append(f"x-show=\"!$store.pyui.nodes['{node.node_id}']?.hidden\"")
             if "disabled" in node.reactive_props:
-                directives.append(f'x-bind:disabled="$store.pyui.nodes[\'{node.node_id}\']?.disabled"')
-            
+                directives.append(
+                    f"x-bind:disabled=\"$store.pyui.nodes['{node.node_id}']?.disabled\""
+                )
+
             if directives:
                 html = html[:space_idx] + " " + " ".join(directives) + html[space_idx:]
 
@@ -310,6 +506,11 @@ def _render_text(node: IRNode) -> str:
     truncate = node.props.get("truncate", False)
     node.props.get("is_reactive", False)
 
+    # Check if this is a raw HTML injection
+    if node.props.get("is_raw_html", False):
+        raw_html = node.props.get("inject_html", "")
+        return raw_html
+
     # content is already resolved (callable was called during build_ir_node)
     safe = html_module.escape(str(content))
     classes = tw.text_classes(
@@ -322,7 +523,7 @@ def _render_text(node: IRNode) -> str:
     # Phase 3 Update: Use Alpine x-text for reactive content
     reactive_attr = ""
     if "content" in node.reactive_props:
-        reactive_attr = f' x-text="$store.pyui.nodes[\'{node.node_id}\']?.content"'
+        reactive_attr = f" x-text=\"$store.pyui.nodes['{node.node_id}']?.content\""
 
     return f'<{element} id="{node.node_id}" class="{classes}"{reactive_attr}>{safe}</{element}>'
 
@@ -1144,6 +1345,11 @@ def _render_list(node: IRNode) -> str:
     return f'<div id="{node.node_id}" class="space-y-4">\n{inner}\n</div>'
 
 
+def _render_raw_html(node: IRNode) -> str:
+    """Render raw HTML content without escaping."""
+    return node.props.get("html", "")
+
+
 def _render_page_node(node: IRNode) -> str:
     """Fallback: render a page-root node by rendering its children."""
     return _children_html(node)
@@ -1175,23 +1381,21 @@ class WebGenerator:
 
         # Alpine x-data: dump reactive state as JSON
         state: dict[str, Any] = dict(self.ir_tree.reactive_vars)
-        
+
         # Collect initial state for reactive nodes on this page
         node_state: dict[str, dict[str, Any]] = {}
+
         def _collect(nodes: list[Any]) -> None:
             for n in nodes:
                 if n.reactive_props:
                     node_state[n.node_id] = {k: n.props.get(k) for k in n.reactive_props}
                 if n.children:
                     _collect(n.children)
-        
+
         _collect(ir_page.children)
-        
+
         # Combined everything into a global state for the page
-        initial_alpine = {
-            "state": state,
-            "nodes": node_state
-        }
+        initial_alpine = {"state": state, "nodes": node_state}
         alpine_data = json.dumps(initial_alpine, default=str)
         state_json = json.dumps(state, default=str)
         node_state_json = json.dumps(node_state, default=str)

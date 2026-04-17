@@ -35,6 +35,7 @@ from pyui import (
 class StorybookPage(Page):
     title = "PyUI Storybook - Component Gallery"
     route = "/"
+
     def compose(self) -> None:
         with Flex(direction="col", gap=10).padding(10):
             Heading("PyUI Storybook", subtitle="Component Gallery & UI Kit").style("gradient")
