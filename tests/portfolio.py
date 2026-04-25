@@ -20,23 +20,10 @@ Run with: python portfolio.py
 Opens at: http://localhost:9010
 """
 
-import base64
-import os
 from pyui import (
     App,
-    Button,
-    Container,
-    Flex,
-    Grid,
-    Heading,
-    Icon,
-    Image,
-    Input,
     Page,
-    RawHTML,
-    Stack,
     Text,
-    reactive,
 )
 
 

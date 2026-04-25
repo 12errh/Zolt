@@ -24,6 +24,7 @@ from pyui import (
     Pagination,
     Page,
     Progress,
+    Radio,
     Select,
     Skeleton,
     Slider,
@@ -33,7 +34,9 @@ from pyui import (
     Stat,
     Table,
     Tag,
+    Tabs,
     Text,
+    Textarea,
     Toggle,
     Tooltip,
 )
@@ -49,6 +52,7 @@ _NAV = [
         ("mouse-pointer-click",  "Buttons",         "buttons"),
         ("text-cursor-input",    "Text Inputs",     "inputs"),
         ("sliders",              "Controls",        "controls"),
+        ("circle-dot",           "Radio",           "radio"),
         ("file-text",            "Forms",           "forms"),
     ]),
     ("Feedback", [
@@ -72,6 +76,7 @@ _NAV = [
 class StorybookPage(Page):
     title = "PyUI Storybook — Component Gallery"
     route = "/"
+    layout = "full-width"
 
     def compose(self) -> None:
         # Root: sidebar fixed-width + main flex-1, no outer padding
@@ -105,21 +110,27 @@ class StorybookPage(Page):
                         "text-[9px] text-gray-400 uppercase tracking-widest"
                     )
 
-            # Nav groups
+            # Nav groups — use RawHTML for proper anchor links with scroll behavior
             for group_label, items in _NAV:
                 Text(group_label).className(
                     "block px-4 pt-4 pb-1 text-[9px] font-semibold "
                     "uppercase tracking-widest text-gray-400"
                 )
-                for icon, label, anchor in items:
-                    with Flex(align="center", gap=2).className(
-                        "px-4 py-[7px] text-[13px] font-medium text-gray-500 "
-                        "hover:text-gray-900 hover:bg-gray-50 cursor-pointer "
-                        "transition-all duration-150 border-l-2 border-transparent "
-                        "hover:border-gray-300 sb-nav-link"
-                    ).id(f"sb-link-{anchor}"):
-                        Icon(icon, size=13)
-                        Text(label).className("text-[13px] leading-none")
+                for icon_name, label, anchor in items:
+                    from pyui.components.display.rawhtml import RawHTML
+                    RawHTML(
+                        f'<a href="#{anchor}" '
+                        f'id="sb-link-{anchor}" '
+                        f'class="flex items-center gap-2 px-4 py-[7px] text-[13px] font-medium '
+                        f'text-gray-500 hover:text-gray-900 hover:bg-gray-50 cursor-pointer '
+                        f'transition-all duration-150 border-l-2 border-transparent '
+                        f'hover:border-gray-300 sb-nav-link no-underline" '
+                        f'onclick="event.preventDefault(); '
+                        f'document.getElementById(\'{anchor}\')?.scrollIntoView({{behavior:\'smooth\'}})">'
+                        f'<i data-lucide="{icon_name}" style="width:13px;height:13px;flex-shrink:0"></i>'
+                        f'<span>{label}</span>'
+                        f'</a>'
+                    )
 
     # =========================================================
     # MAIN — zero side padding on wrapper, sections handle own padding
@@ -135,18 +146,14 @@ class StorybookPage(Page):
                     Heading("Component Gallery", level=3)
                     Badge("42+ Components", variant="secondary")
                 with Flex(align="center", gap=2):
-                    Badge("GSAP", variant="dark")
                     Badge("Alpine.js", variant="dark")
                     Badge("Tailwind", variant="dark")
+                    Badge("Chart.js", variant="dark")
 
-            # Content — max-width so it doesn't stretch on ultra-wide
-            with Flex(direction="col", gap=0).className(
-                "px-8 py-8 pb-24 w-full max-w-5xl"
-            ):
-                # Hero
-                with Flex(direction="col", gap=2).className(
-                    "mb-10 gsap-fade-up"
-                ):
+            # Content area — full width, sections handle their own max-width
+            with Flex(direction="col", gap=0).className("px-8 py-8 pb-24 w-full"):
+                # Hero intro
+                with Flex(direction="col", gap=2).className("mb-10"):
                     Text(
                         "Every PyUI component, live and interactive. "
                         "Built entirely with pure Python — no HTML, no templates."
@@ -158,6 +165,7 @@ class StorybookPage(Page):
                 self._section_buttons()
                 self._section_inputs()
                 self._section_controls()
+                self._section_radio()
                 self._section_forms()
                 self._section_alerts()
                 self._section_overlays()
@@ -186,7 +194,7 @@ class StorybookPage(Page):
         card = Flex(direction="col", gap=0).className(
             "bg-white border border-gray-100 rounded-2xl overflow-hidden "
             "shadow-[0_1px_4px_rgba(0,0,0,0.05)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] "
-            "transition-all duration-300 gsap-scale-in"
+            "transition-all duration-300"
         )
         with card:
             with Flex(align="center", justify="between").className(
@@ -327,7 +335,6 @@ class StorybookPage(Page):
                     Input(placeholder="Search…",        label="Search")
             with self._card_wrap("Textarea + Select + Pickers"):
                 with self._pad():
-                    from pyui.components.input.textarea import Textarea
                     Textarea(placeholder="Write something…", label="Bio", rows=3)
                     Select(options=[
                         ("us","United States"),("uk","United Kingdom"),
@@ -360,6 +367,37 @@ class StorybookPage(Page):
                     Slider(label="Scale",      value=20)
 
     # =========================================================
+    # RADIO
+    # =========================================================
+    def _section_radio(self) -> None:
+        self._section_header("Radio",
+            "Single-selection radio button groups.", "radio")
+        with Grid(cols=2, gap=4):
+            with self._card_wrap("Radio Group", "3 options"):
+                with self._pad():
+                    Radio(
+                        options=[
+                            ("free",    "Free — $0/month"),
+                            ("pro",     "Pro — $12/month"),
+                            ("team",    "Team — $49/month"),
+                        ],
+                        value="pro",
+                        label="Billing Plan",
+                    )
+            with self._card_wrap("Radio Group", "4 options"):
+                with self._pad():
+                    Radio(
+                        options=[
+                            ("web",     "Web"),
+                            ("desktop", "Desktop"),
+                            ("cli",     "CLI"),
+                            ("all",     "All targets"),
+                        ],
+                        value="web",
+                        label="Render Target",
+                    )
+
+    # =========================================================
     # FORMS
     # =========================================================
     def _section_forms(self) -> None:
@@ -381,7 +419,6 @@ class StorybookPage(Page):
                 Select(options=[
                     ("bug","Bug Report"),("feature","Feature Request"),("other","Other")
                 ], label="Subject")
-                from pyui.components.input.textarea import Textarea
                 Textarea(placeholder="Describe your issue…", label="Message", rows=4)
                 Toggle(label="Send me a copy")
                 Button("Send Message").style("primary")
@@ -392,7 +429,7 @@ class StorybookPage(Page):
     def _section_alerts(self) -> None:
         self._section_header("Alerts",
             "Inline status messages with left-accent border design.", "alerts")
-        with Flex(direction="col", gap=3).className("gsap-fade-up"):
+        with Flex(direction="col", gap=3):
             Alert("Information",
                   "This is an informational message. Use it for neutral updates.",
                   variant="info")
@@ -499,7 +536,6 @@ class StorybookPage(Page):
                     Button("Sign In").style("ghost").size("sm")
             with self._card_wrap("Tabs", "Alpine.js switcher"):
                 with Flex(direction="col", gap=0).className("px-5 py-4"):
-                    from pyui.components.navigation.tabs import Tabs
                     Tabs(active_tab="Overview").add_tab(
                         "Overview",
                         Text("Overview content — summary and key metrics.").paragraph(),
@@ -565,12 +601,12 @@ class StorybookPage(Page):
     def _section_stats(self) -> None:
         self._section_header("Stats",
             "Key metric cards with trend indicators.", "stats")
-        with Grid(cols=4, gap=4).className("gsap-fade-up"):
+        with Grid(cols=4, gap=4):
             Stat("Total Users",    "24,521", trend="+18.2%", trend_up=True)
             Stat("Monthly Revenue","$84.2k", trend="+6.1%",  trend_up=True)
             Stat("Churn Rate",     "2.4%",   trend="-0.8%",  trend_up=False)
             Stat("Uptime",         "99.98%", trend="+0.01%", trend_up=True)
-        with Grid(cols=3, gap=4).className("mt-4 gsap-fade-up"):
+        with Grid(cols=3, gap=4).className("mt-4"):
             Stat("Active Sessions","1,204",  trend="+42",    trend_up=True)
             Stat("Avg. Response",  "142ms",  trend="-18ms",  trend_up=True)
             Stat("Error Rate",     "0.03%",  trend="-0.01%", trend_up=True)

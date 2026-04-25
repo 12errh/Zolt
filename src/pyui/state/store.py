@@ -52,7 +52,7 @@ class Store:
         """
         if key in self._state:
             raise PyUIError(
-                f"Store key '{key}' is already defined. Use store.get('{{key}}') to access it."
+                f"Store key '{key}' is already defined. Use store.get('{key}') to access it."
             )
         var: ReactiveVar[Any] = reactive(initial)
         self._state[key] = var
@@ -70,7 +70,7 @@ class Store:
         if key not in self._state:
             raise PyUIError(
                 f"Store key '{key}' is not defined. "
-                "Call store.define('{key}', initial_value) first."
+                f"Call store.define('{key}', initial_value) first."
             )
         return self._state[key]
 

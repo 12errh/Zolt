@@ -112,9 +112,6 @@ _PAGE_TEMPLATE = """\
     }}
   </script>
 
-  <!-- tailwindcss-animate plugin (CDN version) -->
-  <script src="https://cdn.jsdelivr.net/npm/tailwindcss-animate@0.1.1/dist/index.min.js"></script>
-
   <!-- Alpine.js -->
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 
@@ -126,11 +123,6 @@ _PAGE_TEMPLATE = """\
 
   <!-- Icons: Lucide -->
   <script src="https://unpkg.com/lucide@latest"></script>
-
-  <!-- GSAP (GreenSock Animation Platform) -->
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollToPlugin.min.js"></script>
 
   <!-- Markdown: Marked -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -259,10 +251,7 @@ _PAGE_TEMPLATE = """\
     /* Selection */
     ::selection {{ background: #ede9fe; color: #4c1d95; }}
 
-    /* GSAP entrance helpers */
-    .gsap-fade-up {{ opacity: 0; transform: translateY(32px); }}
-    .gsap-fade-in {{ opacity: 0; }}
-    .gsap-scale-in {{ opacity: 0; transform: scale(0.94); }}
+    /* GSAP entrance helpers — removed, not used */
 
     /* Storybook scroll-spy active state */
     .sb-nav-link.sb-active {{
@@ -358,60 +347,9 @@ _PAGE_TEMPLATE = """\
     }}
   </script>
 
-  <!-- GSAP init -->
+  <!-- Scroll-spy for storybook sidebar -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {{
-      if (typeof gsap === 'undefined') return;
-
-      gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
-
-      // Entrance animations for .gsap-fade-up elements
-      gsap.utils.toArray('.gsap-fade-up').forEach((el, i) => {{
-        gsap.to(el, {{
-          opacity: 1,
-          y: 0,
-          duration: 0.7,
-          delay: i * 0.05,
-          ease: 'power3.out',
-          scrollTrigger: {{
-            trigger: el,
-            start: 'top 92%',
-            toggleActions: 'play none none none',
-          }},
-        }});
-      }});
-
-      // Entrance for .gsap-fade-in
-      gsap.utils.toArray('.gsap-fade-in').forEach((el, i) => {{
-        gsap.to(el, {{
-          opacity: 1,
-          duration: 0.6,
-          delay: i * 0.04,
-          ease: 'power2.out',
-          scrollTrigger: {{
-            trigger: el,
-            start: 'top 94%',
-            toggleActions: 'play none none none',
-          }},
-        }});
-      }});
-
-      // Scale-in for cards
-      gsap.utils.toArray('.gsap-scale-in').forEach((el, i) => {{
-        gsap.to(el, {{
-          opacity: 1,
-          scale: 1,
-          duration: 0.5,
-          delay: i * 0.06,
-          ease: 'back.out(1.4)',
-          scrollTrigger: {{
-            trigger: el,
-            start: 'top 93%',
-            toggleActions: 'play none none none',
-          }},
-        }});
-      }});
-
       // Storybook scroll-spy: highlight active sidebar link by id
       const sbLinks = document.querySelectorAll('.sb-nav-link');
       const sbSections = [];
@@ -429,9 +367,6 @@ _PAGE_TEMPLATE = """\
               sbLinks.forEach(link => {{
                 const isActive = link.id === 'sb-link-' + id;
                 link.classList.toggle('sb-active', isActive);
-                if (isActive) {{
-                  link.scrollIntoView({{ block: 'nearest', behavior: 'smooth' }});
-                }}
               }});
             }}
           }});
@@ -535,21 +470,20 @@ def _render_node(node: IRNode) -> str:
         model_prop = "checked" if node.type in ["checkbox", "toggle"] else "value"
         if model_prop in node.reactive_props and len(node.reactive_props[model_prop]) == 1:
             var_name = node.reactive_props[model_prop][0]
-            # Find the first space after the opening tag to inject attributes
-            space_idx = html.find(" ")
-            if space_idx != -1:
-                html = (
-                    html[:space_idx]
-                    + f' x-model="$store.pyui.state.{var_name}" '
-                    + f"@input=\"__pyuiEvent('update_state', {{ '{var_name}': $el.{model_prop} }})\""
-                    + html[space_idx:]
+            # Find the first '>' to locate the end of the opening tag, then inject before it
+            gt_idx = html.find(">")
+            if gt_idx != -1:
+                inject = (
+                    f' x-model="$store.pyui.state.{var_name}"'
+                    f" @input=\"__pyuiEvent('update_state', {{ '{var_name}': $el.{model_prop} }})\""
                 )
+                html = html[:gt_idx] + inject + html[gt_idx:]
 
     # Inject Alpine.js directives for shared reactive properties (hidden, disabled)
     if node.reactive_props:
-        # Find the first space after the opening tag to inject attributes
-        space_idx = html.find(" ")
-        if space_idx != -1:
+        # Find the first '>' to locate the end of the opening tag
+        gt_idx = html.find(">")
+        if gt_idx != -1:
             directives = []
             if "hidden" in node.reactive_props:
                 directives.append(f"x-show=\"!$store.pyui.nodes['{node.node_id}']?.hidden\"")
@@ -559,7 +493,7 @@ def _render_node(node: IRNode) -> str:
                 )
 
             if directives:
-                html = html[:space_idx] + " " + " ".join(directives) + html[space_idx:]
+                html = html[:gt_idx] + " " + " ".join(directives) + html[gt_idx:]
 
     # Inject custom CSS classes if any are defined for the node
     custom_class = node.props.get("class_name", "").strip()
@@ -824,9 +758,14 @@ def _render_image(node: IRNode) -> str:
     src = html_module.escape(str(node.props.get("src", "")))
     alt = html_module.escape(str(node.props.get("alt", "")))
     fit = node.props.get("fit")
+    width = node.props.get("width")
+    height = node.props.get("height")
     classes = tw.image_classes(fit=fit)
 
-    return f'<img id="{node.node_id}" src="{src}" alt="{alt}" class="{classes}" loading="lazy">'
+    width_attr = f' width="{html_module.escape(str(width))}"' if width else ""
+    height_attr = f' height="{html_module.escape(str(height))}"' if height else ""
+
+    return f'<img id="{node.node_id}" src="{src}" alt="{alt}" class="{classes}"{width_attr}{height_attr} loading="lazy">'
 
 
 def _render_markdown(node: IRNode) -> str:
@@ -1230,10 +1169,14 @@ def _render_progress(node: IRNode) -> str:
 
 def _render_spinner(node: IRNode) -> str:
     size = node.props.get("spinner_size", "md")
-    classes = tw.spinner_classes(size)
+    # Use inline pixel sizes so Tailwind CDN JIT doesn't need to scan dynamic classes
+    _size_px = {"xs": 12, "sm": 16, "md": 24, "lg": 32, "xl": 48}
+    px = _size_px.get(size, 24)
 
     return (
-        f'<svg id="{node.node_id}" class="{classes}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">\n'
+        f'<svg id="{node.node_id}" class="animate-spin" '
+        f'style="width:{px}px;height:{px}px;color:#111827;flex-shrink:0" '
+        f'xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">\n'
         f'  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>\n'
         f'  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>\n'
         f"</svg>"
