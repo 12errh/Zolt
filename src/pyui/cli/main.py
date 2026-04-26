@@ -165,10 +165,14 @@ def cmd_build(target: str, out: str, app_file: str) -> None:
     from pyui.compiler import compile_app
 
     try:
-        output_path = compile_app(AppClass, target=target, output_dir=out)
+        output_path, stats = compile_app(AppClass, target=target, output_dir=out)
         if target == "web":
+            pages = stats.get("pages", "?")
+            total_kb = stats.get("total_kb", "?")
+            elapsed = stats.get("elapsed_ms", "?")
             console.print(
-                f"[green]Built[/green] [cyan]{app_file}[/cyan] → [cyan]{output_path}[/cyan]"
+                f"[green]Built[/green] [cyan]{app_file}[/cyan] → [cyan]{output_path}[/cyan]  "
+                f"[dim]{pages} page(s) · {total_kb} KB · {elapsed}ms[/dim]"
             )
         elif target == "all":
             console.print(

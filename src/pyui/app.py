@@ -21,7 +21,7 @@ from __future__ import annotations
 import inspect
 from typing import Any
 
-from pyui.exceptions import PyUIError
+from pyui.exceptions import MissingRouteError, PyUIError
 from pyui.page import Page
 
 
@@ -41,7 +41,10 @@ class AppMeta(type):
         for attr_name, value in inspect.getmembers(cls):
             if isinstance(value, Page):
                 if value.route is None:
-                    raise PyUIError(f"Page '{attr_name}' on App '{name}' is missing a 'route'.")
+                    raise MissingRouteError(
+                        f"Page '{attr_name}' on App '{name}' is missing a 'route'.\n"
+                        f"  Add a route like: {attr_name} = Page(title='...', route='/')"
+                    )
                 pages[attr_name] = value
 
         cls._pages = pages  # type: ignore[attr-defined]

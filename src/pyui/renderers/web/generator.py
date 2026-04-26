@@ -582,13 +582,23 @@ def _render_node(node: IRNode) -> str:
     }
     renderer = dispatch.get(node.type)
     if renderer is None:
-        # Unknown component — render as a debug placeholder
         return (
             f'<div class="border-2 border-dashed border-red-300 p-4 rounded text-red-500 text-sm">'
             f"Unknown component: <code>{html_module.escape(node.type)}</code>"
             f"</div>"
         )
-    html = renderer(node)
+    # Graceful degradation — a broken component renders an error card, not a crash
+    try:
+        html = renderer(node)
+    except Exception as exc:
+        import traceback
+        tb = html_module.escape(traceback.format_exc())
+        return (
+            f'<div class="border-2 border-dashed border-orange-400 p-4 rounded text-sm">'
+            f'<p class="font-bold text-orange-600">Component error: {html_module.escape(node.type)}</p>'
+            f'<pre class="mt-2 text-xs text-orange-500 overflow-auto">{tb}</pre>'
+            f"</div>"
+        )
 
     # Inject Alpine.js x-model for 2-way binding on inputs
     if node.type in ["input", "textarea", "checkbox", "select", "toggle", "slider"]:
@@ -1654,14 +1664,23 @@ class WebGenerator:
             pages_json=pages_json,
         )
 
-    def write_to_disk(self, output_dir: Path) -> None:
+    def write_to_disk(self, output_dir: Path) -> dict[str, Any]:
         """
         Write all pages to *output_dir* as HTML files.
 
         The root page (``route="/"`) is written as ``index.html``.
-        Other pages are written as ``<route-slug>/index.html``.
+        Other pages are written as ``<route-slug>.html``.
+
+        Returns
+        -------
+        dict
+            Build stats: pages written, total size, file list.
         """
+        import time
+
         output_dir.mkdir(parents=True, exist_ok=True)
+        start = time.perf_counter()
+        files: list[dict[str, Any]] = []
 
         for ir_page in self.ir_tree.pages:
             html = self.render_ir_page(ir_page)
@@ -1673,6 +1692,17 @@ class WebGenerator:
                 out_file = output_dir / f"{slug}.html"
 
             out_file.write_text(html, encoding="utf-8")
+            files.append({"file": out_file.name, "size_kb": round(len(html.encode()) / 1024, 1)})
+
+        elapsed = round((time.perf_counter() - start) * 1000)
+        total_kb = sum(f["size_kb"] for f in files)
+
+        return {
+            "pages": len(files),
+            "files": files,
+            "total_kb": round(total_kb, 1),
+            "elapsed_ms": elapsed,
+        }
 
 
 # ── Convenience helpers (used in tests and by the dev server) ─────────────────

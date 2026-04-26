@@ -18,7 +18,7 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pyui.exceptions import PyUIError
+from pyui.exceptions import AppNotFoundError, ModuleImportError, PyUIError
 
 if TYPE_CHECKING:
     from pyui.app import App
@@ -60,24 +60,31 @@ def discover_app(module_path: str) -> type[App]:
     module_name = f"_pyui_user_app_{path.stem}"
     spec = importlib.util.spec_from_file_location(module_name, str(path))
     if spec is None or spec.loader is None:
-        raise PyUIError(f"Cannot create module spec for {path}")
+        raise ModuleImportError(f"Cannot create module spec for {path}")
 
     module = importlib.util.module_from_spec(spec)
 
     try:
         spec.loader.exec_module(module)
     except Exception as exc:
-        raise PyUIError(f"Error importing '{path}': {exc}") from exc
+        raise ModuleImportError(
+            f"Error importing '{path}': {exc}\n"
+            f"  Check that the file is valid Python and all imports are available."
+        ) from exc
 
-    # Find all App subclasses defined in this module
     candidates: list[type[App]] = []
     for _name, obj in inspect.getmembers(module, inspect.isclass):
         if issubclass(obj, App) and obj is not App and obj.__module__ == module_name:
             candidates.append(obj)
 
     if not candidates:
-        raise PyUIError(
-            f"No App subclass found in '{path}'. Create a class that inherits from 'pyui.App'."
+        raise AppNotFoundError(
+            f"No App subclass found in '{path}'.\n"
+            f"  Create a class that inherits from pyui.App:\n\n"
+            f"    from pyui import App\n"
+            f"    class MyApp(App):\n"
+            f"        name = 'My App'\n"
+            f"        home = HomePage()"
         )
 
     if len(candidates) > 1:

@@ -8,7 +8,7 @@ Public API:
 """
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pyui.compiler.discovery import discover_app
 from pyui.compiler.ir import IRNode, IRPage, IRTree, build_ir_node, build_ir_page, build_ir_tree
@@ -98,7 +98,7 @@ def compile_app(
     app_class: "type[App]",
     target: str = "web",
     output_dir: str = "./dist",
-) -> Path:
+) -> tuple[Path, dict[str, Any]]:
     """
     Compile *app_class* for *target* and write output to *output_dir*.
 
@@ -113,8 +113,8 @@ def compile_app(
 
     Returns
     -------
-    Path
-        The resolved output directory path.
+    tuple[Path, dict]
+        The resolved output directory path and build stats dict.
     """
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
@@ -131,25 +131,30 @@ def compile_app(
         for p in plugins:
             p.on_compile_end(ir)
         gen = WebGenerator(ir)
-        gen.write_to_disk(out)
+        stats = gen.write_to_disk(out)
         for p in plugins:
             p.on_build(out)
+        return out, stats
 
     elif target == "desktop":
         _write_launcher(app_class, out, target="desktop")
+        return out, {}
 
     elif target == "cli":
         _write_launcher(app_class, out, target="cli")
+        return out, {}
 
     elif target == "all":
-        # Build all three targets into separate subdirectories
         for t in ("web", "desktop", "cli"):
             compile_app(app_class, target=t, output_dir=str(out / t))
+        return out, {}
 
     else:
         raise NotImplementedError(
             f"Target '{target}' is not yet implemented. Available targets: 'web', 'desktop', 'cli', 'all'."
         )
+
+    return out, {}
 
     return out
 

@@ -35,6 +35,56 @@ if TYPE_CHECKING:
 
 log = get_logger(__name__)
 
+# ── Security middleware ───────────────────────────────────────────────────────
+
+_CSP = (
+    "default-src 'self'; "
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' "
+    "cdn.tailwindcss.com cdn.jsdelivr.net unpkg.com fonts.googleapis.com; "
+    "style-src 'self' 'unsafe-inline' fonts.googleapis.com fonts.gstatic.com; "
+    "font-src 'self' fonts.gstatic.com; "
+    "img-src 'self' data: blob:; "
+    "connect-src 'self' ws: wss:; "
+    "frame-ancestors 'none';"
+)
+
+_SECURITY_HEADERS = {
+    "Content-Security-Policy": _CSP,
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+}
+
+
+@web.middleware
+async def _security_middleware(
+    request: web.Request,
+    handler: Any,
+) -> web.StreamResponse:
+    """Inject security headers and handle CORS for API routes."""
+    # CORS preflight
+    if request.method == "OPTIONS":
+        return web.Response(
+            status=204,
+            headers={
+                "Access-Control-Allow-Origin": "http://localhost:*",
+                "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type",
+            },
+        )
+
+    response = await handler(request)
+
+    # Inject security headers on all responses
+    for key, value in _SECURITY_HEADERS.items():
+        response.headers[key] = value
+
+    # CORS for API routes only (not page HTML)
+    if request.path.startswith("/pyui-api/"):
+        response.headers["Access-Control-Allow-Origin"] = "http://localhost:*"
+
+    return response
+
 
 def _reimport_app(module_path: str, original_class: type[App]) -> type[App]:
     """
@@ -331,7 +381,7 @@ class PyUIDevServer:
 
     def build_aiohttp_app(self) -> web.Application:
         """Build and return the configured aiohttp Application."""
-        aio_app = web.Application()
+        aio_app = web.Application(middlewares=[_security_middleware])
         aio_app.router.add_post("/pyui-api/event/{handler_id}", self._handle_event)
         aio_app.router.add_post("/pyui-api/theme/{name}", self._handle_theme)
         aio_app.router.add_get("/pyui-api/devtools/state", self._handle_devtools_state)

@@ -16,7 +16,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from pyui.exceptions import ThemeError
+from pyui.exceptions import ThemeError, UnknownThemeError
 from pyui.theme.tokens import BUILT_IN_THEMES, DEFAULT_TOKENS
 
 
@@ -47,7 +47,7 @@ def build_theme(theme: str | dict[str, str]) -> dict[str, str]:
     if isinstance(theme, str):
         if theme not in BUILT_IN_THEMES:
             known = ", ".join(f'"{k}"' for k in BUILT_IN_THEMES)
-            raise ThemeError(
+            raise UnknownThemeError(
                 f"Unknown theme {theme!r}. "
                 f"Built-in themes are: {known}. "
                 "Pass a dict of token overrides for a custom theme."

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from pyui.exceptions import PluginError
+from pyui.exceptions import PluginConflictError
 
 if TYPE_CHECKING:
     from pyui.components.base import BaseComponent
@@ -37,7 +37,7 @@ def register_component(name: str, component_class: type[BaseComponent]) -> None:
     """
     existing = _REGISTRY.get(name)
     if existing is not None and existing is not component_class:
-        raise PluginError(
+        raise PluginConflictError(
             f"Component {name!r} is already registered by {existing!r}. "
             "Use a unique name or unregister the existing component first."
         )
