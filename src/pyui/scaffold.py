@@ -1,5 +1,5 @@
 """
-Project scaffolder — implements ``pyui new <name>``.
+Project scaffolder — implements ``zeno new <name>``.
 
 Creates a minimal working project directory with app.py, requirements.txt,
 and README.md. The ``--template`` flag selects a richer starting point.
@@ -13,9 +13,9 @@ from pathlib import Path
 
 _BLANK_APP = '''\
 """
-{name} — built with PyUI.
+{name} — built with Zeno.
 
-Run with: pyui run
+Run with: zeno run
 """
 
 from pyui import App, Button, Flex, Heading, Page, Text
@@ -28,7 +28,7 @@ class HomePage(Page):
     def compose(self) -> None:
         with Flex(direction="col", align="center", justify="center", gap=6):
             Heading("{name}", level=1)
-            Text("Welcome to your new PyUI app.").style("muted")
+            Text("Welcome to your new Zeno app.").style("muted")
             Button("Get Started").style("primary").size("lg")
 
 
@@ -39,9 +39,9 @@ class {class_name}(App):
 
 _DASHBOARD_APP = '''\
 """
-{name} — dashboard template built with PyUI.
+{name} — dashboard template built with Zeno.
 
-Run with: pyui run
+Run with: zeno run
 """
 
 from pyui import App, Badge, Flex, Grid, Heading, Nav, Page, Stat, Table, Text
@@ -106,7 +106,7 @@ class {class_name}(App):
 '''
 
 _REQUIREMENTS = """\
-pyui-framework>=0.1.0
+zeno-py>=1.0.0
 """
 
 _README = """\
@@ -117,17 +117,17 @@ Built with [PyUI](https://github.com/12errh/pyui).
 ## Getting started
 
 ```bash
-pip install pyui-framework
-pyui run
+pip install zeno-py
+zeno run
 ```
 
 ## Commands
 
 ```bash
-pyui run              # Start dev server
-pyui run --target desktop  # Open as desktop app
-pyui run --target cli      # Render in terminal
-pyui build            # Build for production
+zeno run              # Start dev server
+zeno run --target desktop  # Open as desktop app
+zeno run --target cli      # Render in terminal
+zeno build            # Build for production
 ```
 """
 

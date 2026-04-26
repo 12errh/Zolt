@@ -74,7 +74,7 @@ _NAV = [
 
 
 class StorybookPage(Page):
-    title = "PyUI Storybook — Component Gallery"
+    title = "Zeno Storybook — Component Gallery"
     route = "/"
     layout = "full-width"
 
@@ -677,7 +677,7 @@ class StorybookPage(Page):
                     Table(
                         headers=["Package","Version","License","Downloads"],
                         rows=[
-                            ["pyui-framework","0.1.0", "MIT",    "12.4k"],
+                            ["zeno-py",           "1.0.0", "MIT",    "12.4k"],
                             ["click",         "8.1.7", "BSD",    "890M"],
                             ["aiohttp",       "3.9.1", "Apache", "45M"],
                             ["rich",          "13.7.0","MIT",    "120M"],
@@ -784,7 +784,7 @@ class Home(Page):
 
 
 class StorybookApp(App):
-    name = "PyUI Storybook"
+    name = "Zeno Storybook"
     index = StorybookPage()
 
 

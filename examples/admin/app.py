@@ -1,7 +1,7 @@
 """
-PyUI Example — Admin Panel (CRUD)
+Zeno Example — Admin Panel (CRUD)
 
-Run with: pyui run examples/admin/app.py
+Run with: zeno run examples/admin/app.py
 """
 
 from pyui import (

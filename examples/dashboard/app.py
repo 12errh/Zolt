@@ -1,7 +1,7 @@
 """
-PyUI Example — Analytics Dashboard
+Zeno Example — Analytics Dashboard
 
-Run with: pyui run examples/dashboard/app.py
+Run with: zeno run examples/dashboard/app.py
 """
 
 from pyui import (

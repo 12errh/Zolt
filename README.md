@@ -1,21 +1,21 @@
-# PyUI
+# Zeno
 
 > **Write Python. Render anywhere.**  
 > Web · Desktop · Terminal — from a single Python codebase.
 
-[![PyPI](https://img.shields.io/pypi/v/pyui-framework)](https://pypi.org/project/pyui-framework)
+[![PyPI](https://img.shields.io/pypi/v/zeno-py)](https://pypi.org/project/zeno-py)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://github.com/12errh/pyui/actions/workflows/test.yml/badge.svg)](https://github.com/12errh/pyui/actions)
+[![Tests](https://github.com/12errh/zeno-py/actions/workflows/test.yml/badge.svg)](https://github.com/12errh/zeno-py/actions)
 
-PyUI is a production-ready Python UI framework. Write your entire UI in pure Python — no HTML, no CSS, no JavaScript. One codebase compiles to a web app, a native desktop window, and a terminal UI.
+Zeno is a production-ready Python UI framework. Write your entire UI in pure Python — no HTML, no CSS, no JavaScript. One codebase compiles to a web app, a native desktop window, and a terminal UI.
 
 ---
 
 ## Install
 
 ```bash
-pip install pyui-framework
+pip install zeno-py
 ```
 
 Requires Python 3.10+.
@@ -25,17 +25,17 @@ Requires Python 3.10+.
 ## Quick start
 
 ```bash
-pyui new my-app
+zeno new my-app
 cd my-app
-pyui run          # → http://localhost:8000
+zeno run          # → http://localhost:8000
 ```
 
 Or scaffold a dashboard:
 
 ```bash
-pyui new my-dash --template dashboard
+zeno new my-dash --template dashboard
 cd my-dash
-pyui run
+zeno run
 ```
 
 ---
@@ -51,7 +51,7 @@ class HomePage(Page):
 
     def compose(self):
         with Flex(direction="col", align="center", gap=6):
-            Heading("Hello from PyUI", level=1)
+            Heading("Hello from Zeno", level=1)
             Text("Built with pure Python.").style("muted")
             Button("Get Started").style("primary").size("lg")
 
@@ -63,9 +63,9 @@ class MyApp(App):
 Run it:
 
 ```bash
-pyui run app.py                    # web browser
-pyui run app.py --target desktop   # native window
-pyui run app.py --target cli       # terminal
+zeno run app.py                    # web browser
+zeno run app.py --target desktop   # native window
+zeno run app.py --target cli       # terminal
 ```
 
 ---
@@ -128,15 +128,15 @@ class MyApp(App):
 
 | Command | Description |
 |---|---|
-| `pyui new <name>` | Scaffold a new project (`--template blank\|dashboard\|landing\|admin\|auth`) |
-| `pyui run [app.py]` | Start dev server with hot reload (`--target web\|desktop\|cli`) |
-| `pyui build [app.py]` | Production build (`--target web\|desktop\|cli\|all`) |
-| `pyui storybook` | Open component gallery |
-| `pyui doctor` | Check environment health |
-| `pyui lint [app.py]` | Lint component definitions |
-| `pyui search <query>` | Search PyPI for `pyui-*` packages |
-| `pyui publish` | Publish a component package to PyPI |
-| `pyui info` | Show version info |
+| `zeno new <name>` | Scaffold a new project (`--template blank\|dashboard\|landing\|admin\|auth`) |
+| `zeno run [app.py]` | Start dev server with hot reload (`--target web\|desktop\|cli`) |
+| `zeno build [app.py]` | Production build (`--target web\|desktop\|cli\|all`) |
+| `zeno storybook` | Open component gallery |
+| `zeno doctor` | Check environment health |
+| `zeno lint [app.py]` | Lint component definitions |
+| `zeno search <query>` | Search PyPI for `zeno-*` packages |
+| `zeno publish` | Publish a component package to PyPI |
+| `zeno info` | Show version info |
 
 ---
 
@@ -146,7 +146,7 @@ class MyApp(App):
 from pyui.plugins import PyUIPlugin, register_component
 
 class ChartsPlugin(PyUIPlugin):
-    name = "pyui-charts"
+    name = "zeno-charts"
     version = "1.0.0"
 
     def on_load(self, app):
@@ -173,7 +173,7 @@ Five full example apps are in [`examples/`](examples/):
 Run any example:
 
 ```bash
-pyui run examples/dashboard/app.py
+zeno run examples/dashboard/app.py
 ```
 
 ---
@@ -189,15 +189,15 @@ pyui run examples/dashboard/app.py
 - ✅ Hot reload (file save → browser update)
 - ✅ Dev tools panel (state inspector, event log)
 - ✅ Error overlay with structured error codes (`PYUI-NNN`)
-- ✅ `pyui lint` — component tree validation
-- ✅ `pyui doctor` — environment health check
-- ✅ `pyui publish` — marketplace publishing via PyPI
+- ✅ `zeno lint` — component tree validation
+- ✅ `zeno doctor` — environment health check
+- ✅ `zeno publish` — marketplace publishing via PyPI
 
 ---
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Issues labelled [`good-first-issue`](https://github.com/12errh/pyui/issues?q=label%3Agood-first-issue) are a great place to start.
+See [CONTRIBUTING.md](CONTRIBUTING.md). Issues labelled [`good-first-issue`](https://github.com/12errh/zeno-py/issues?q=label%3Agood-first-issue) are a great place to start.
 
 ## License
 

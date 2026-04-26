@@ -1,12 +1,12 @@
-# Contributing to PyUI
+# Contributing to Zeno
 
 Thank you for your interest in contributing! 🎉
 
 ## Setup
 
 ```bash
-git clone https://github.com/pyui-framework/pyui
-cd pyui
+git clone https://github.com/12errh/zeno-py
+cd zeno-py
 pip install -e ".[dev]"
 pre-commit install
 ```
@@ -39,12 +39,12 @@ mypy src/
 1. Fork the repo and create a branch: `git checkout -b feat/my-feature`
 2. Write tests for new code
 3. Ensure all checks pass (`pytest`, `ruff`, `mypy`)
-4. Open a PR against `dev` branch
+4. Open a PR against `main` branch
 
 ## Reporting Issues
 
 Use GitHub Issues. Include:
-- PyUI version (`pyui --version`)
+- Zeno version (`zeno --version`)
 - Python version
 - OS
 - Minimal reproduction code

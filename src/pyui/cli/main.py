@@ -1,7 +1,7 @@
 """
-PyUI CLI entry point.
+Zeno CLI entry point.
 
-All subcommands live under the ``pyui`` group. Run ``pyui --help`` for usage.
+All subcommands live under the ``zeno`` group. Run ``zeno --help`` for usage.
 """
 
 from __future__ import annotations
@@ -24,13 +24,13 @@ console = Console()
     context_settings={"help_option_names": ["-h", "--help"]},
     invoke_without_command=True,
 )
-@click.version_option(pyui.__version__, "-V", "--version", prog_name="PyUI")
+@click.version_option(pyui.__version__, "-V", "--version", prog_name="Zeno")
 @click.option("-v", "--verbose", is_flag=True, help="Enable verbose (DEBUG) logging.")
 @click.pass_context
 def main(ctx: click.Context, verbose: bool) -> None:
     """
     \b
-    PyUI -- Write Python. Render anywhere.
+    Zeno -- Write Python. Render anywhere.
     Web | Desktop | CLI from a single Python codebase.
     """
     configure_logging("DEBUG" if verbose else "INFO")
@@ -38,8 +38,8 @@ def main(ctx: click.Context, verbose: bool) -> None:
     if ctx.invoked_subcommand is None:
         console.print(
             Panel.fit(
-                f"[bold cyan]PyUI[/bold cyan] [dim]v{pyui.__version__}[/dim]\n"
-                "[dim]Run [bold]pyui --help[/bold] to see available commands.[/dim]",
+                f"[bold cyan]Zeno[/bold cyan] [dim]v{pyui.__version__}[/dim]\n"
+                "[dim]Run [bold]zeno --help[/bold] to see available commands.[/dim]",
                 box=box.ASCII,
                 border_style="cyan",
             )
@@ -66,7 +66,7 @@ def main(ctx: click.Context, verbose: bool) -> None:
     help="Default render target.",
 )
 def cmd_new(name: str, template: str, target: str) -> None:
-    """Scaffold a new PyUI project called NAME."""
+    """Scaffold a new Zeno project called NAME."""
     from pyui.scaffold import create_project
 
     try:
@@ -74,7 +74,7 @@ def cmd_new(name: str, template: str, target: str) -> None:
         console.print(
             f"[green]✓[/green] Created [cyan]{name}[/cyan] at [dim]{project_path}[/dim]\n\n"
             f"  [dim]cd {name}[/dim]\n"
-            f"  [dim]pyui run[/dim]"
+            f"  [dim]zeno run[/dim]"
         )
     except Exception as exc:
         console.print(f"[red]Error:[/red] {exc}")
@@ -100,7 +100,7 @@ def cmd_new(name: str, template: str, target: str) -> None:
 )
 @click.argument("app_file", default="app.py", required=False)
 def cmd_run(target: str, port: int, host: str, no_browser: bool, app_file: str) -> None:
-    """Start the PyUI dev server (APP_FILE defaults to app.py)."""
+    """Start the Zeno dev server (APP_FILE defaults to app.py)."""
     try:
         from pyui.compiler.discovery import discover_app
 
@@ -197,22 +197,21 @@ def cmd_build(target: str, out: str, app_file: str) -> None:
 @click.option("--name", default=None, help="Override package name.")
 @click.option("--build-only", is_flag=True, default=False, help="Build dist/ but do not upload.")
 def cmd_publish(name: str | None, build_only: bool) -> None:
-    """Package and publish a PyUI component to PyPI."""
+    """Package and publish a Zeno component to PyPI."""
     import json
     import subprocess
     import sys
     from pathlib import Path
 
-    # 1. Validate pyui.json manifest
     manifest_path = Path("pyui.json")
     if not manifest_path.exists():
         console.print(
             "[red]Error:[/red] No [cyan]pyui.json[/cyan] found in the current directory.\n\n"
             "Create one with the following structure:\n"
             '[dim]{\n'
-            '  "name": "pyui-my-component",\n'
+            '  "name": "zeno-my-component",\n'
             '  "version": "1.0.0",\n'
-            '  "pyui_version": ">=0.1.0",\n'
+            '  "pyui_version": ">=1.0.0",\n'
             '  "components": ["MyComponent"],\n'
             '  "targets": ["web"],\n'
             '  "author": "Your Name",\n'
@@ -236,22 +235,18 @@ def cmd_publish(name: str | None, build_only: bool) -> None:
     pkg_name = name or manifest["name"]
     pkg_version = manifest["version"]
 
-    # 2. Check pyproject.toml or setup.py exists
     has_pyproject = Path("pyproject.toml").exists()
     has_setup = Path("setup.py").exists()
     if not has_pyproject and not has_setup:
         console.print(
-            "[red]Error:[/red] No [cyan]pyproject.toml[/cyan] or [cyan]setup.py[/cyan] found.\n"
-            "PyUI packages are standard Python packages — add a pyproject.toml to build."
+            "[red]Error:[/red] No [cyan]pyproject.toml[/cyan] or [cyan]setup.py[/cyan] found."
         )
         raise SystemExit(1) from None
 
     console.print(f"[bold]Publishing[/bold] [cyan]{pkg_name}[/cyan] v[dim]{pkg_version}[/dim]\n")
 
-    # 3. Build the distribution
     console.print("[dim]Building distribution...[/dim]")
-    build_cmd = [sys.executable, "-m", "build"]
-    result = subprocess.run(build_cmd, capture_output=True, text=True)  # noqa: S603
+    result = subprocess.run([sys.executable, "-m", "build"], capture_output=True, text=True)  # noqa: S603
     if result.returncode != 0:
         console.print(f"[red]Build failed:[/red]\n{result.stderr}")
         console.print("[dim]Tip: pip install build[/dim]")
@@ -262,10 +257,8 @@ def cmd_publish(name: str | None, build_only: bool) -> None:
         console.print("\n[dim]--build-only: skipping upload.[/dim]")
         return
 
-    # 4. Upload to PyPI via twine
     console.print("[dim]Uploading to PyPI...[/dim]")
-    upload_cmd = [sys.executable, "-m", "twine", "upload", "dist/*"]
-    result = subprocess.run(upload_cmd, text=True)  # noqa: S603
+    result = subprocess.run([sys.executable, "-m", "twine", "upload", "dist/*"], text=True)  # noqa: S603
     if result.returncode != 0:
         console.print("[red]Upload failed.[/red] [dim]Tip: pip install twine[/dim]")
         raise SystemExit(1) from None
@@ -282,12 +275,12 @@ def cmd_publish(name: str | None, build_only: bool) -> None:
 @main.command("search")
 @click.argument("query")
 def cmd_search(query: str) -> None:
-    """Search PyPI for PyUI component packages matching QUERY."""
+    """Search PyPI for Zeno component packages matching QUERY."""
     import json as _json
     import urllib.parse
     import urllib.request
 
-    search_term = f"pyui-{query}" if not query.startswith("pyui") else query
+    search_term = f"zeno-{query}" if not query.startswith("zeno") else query
     url = f"https://pypi.org/pypi/{urllib.parse.quote(search_term)}/json"
 
     console.print(f"[dim]Searching PyPI for[/dim] [cyan]{search_term}[/cyan]...\n")
@@ -300,11 +293,10 @@ def cmd_search(query: str) -> None:
         console.print(f"  {info.get('summary', 'No description.')}")
         console.print(f"  [dim]Install:[/dim] pip install {info['name']}")
     except Exception:
-        # Fall back to simple PyPI search via the search endpoint
         console.print(
             f"[yellow]![/yellow]  Package [cyan]{search_term}[/cyan] not found on PyPI.\n"
-            f"  Browse community packages at [link=https://pypi.org/search/?q=pyui-]"
-            f"https://pypi.org/search/?q=pyui-[/link]"
+            f"  Browse community packages at [link=https://pypi.org/search/?q=zeno-]"
+            f"https://pypi.org/search/?q=zeno-[/link]"
         )
 
 
@@ -315,64 +307,53 @@ def cmd_search(query: str) -> None:
 def cmd_doctor() -> None:
     """Check environment health (Python version, dependencies, ports)."""
     import importlib.metadata
+    import json as _json
     import platform
     import socket
     import sys
+    import urllib.request
 
     from rich.table import Table
 
-    console.print("[bold]PyUI Doctor[/bold]\n")
+    console.print("[bold]Zeno Doctor[/bold]\n")
 
     results: list[tuple[str, str, str]] = []
 
-    # Python version
     py_ver = sys.version.split()[0]
     py_ok = sys.version_info >= (3, 10)
     results.append(("Python >= 3.10", py_ver, "✓" if py_ok else "✗ upgrade required"))
 
-    # PyUI version + latest from PyPI
     try:
-        import json as _json
-        import urllib.request
-
         with urllib.request.urlopen(  # noqa: S310
-            "https://pypi.org/pypi/pyui-framework/json", timeout=3
+            "https://pypi.org/pypi/zeno-py/json", timeout=3
         ) as r:
             latest = _json.loads(r.read())["info"]["version"]
         up_to_date = latest == pyui.__version__
-        results.append(
-            (
-                "PyUI version",
-                f"{pyui.__version__} (latest: {latest})",
-                "✓" if up_to_date else f"↑ {latest} available",
-            )
-        )
+        results.append((
+            "Zeno version",
+            f"{pyui.__version__} (latest: {latest})",
+            "✓" if up_to_date else f"↑ {latest} available",
+        ))
     except Exception:
-        results.append(("PyUI version", pyui.__version__, "✓ (PyPI check skipped)"))
+        results.append(("Zeno version", pyui.__version__, "✓ (PyPI check skipped)"))
 
-    # Required dependencies
-    required_deps = ["click", "jinja2", "aiohttp", "watchdog", "rich", "structlog"]
-    for dep in required_deps:
+    for dep in ["click", "jinja2", "aiohttp", "watchdog", "rich", "structlog"]:
         try:
             ver = importlib.metadata.version(dep)
             results.append((f"dep: {dep}", ver, "✓"))
         except importlib.metadata.PackageNotFoundError:
-            results.append((f"dep: {dep}", "NOT FOUND", "✗ pip install pyui-framework"))
+            results.append((f"dep: {dep}", "NOT FOUND", "✗ pip install zeno-py"))
 
-    # Port availability
     for port in [8000, 9000]:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.settimeout(0.2)
             in_use = s.connect_ex(("localhost", port)) == 0
-        results.append(
-            (
-                f"Port {port}",
-                "in use" if in_use else "available",
-                "⚠ choose another port" if in_use else "✓",
-            )
-        )
+        results.append((
+            f"Port {port}",
+            "in use" if in_use else "available",
+            "⚠ choose another port" if in_use else "✓",
+        ))
 
-    # Platform
     results.append(("Platform", f"{platform.system()} {platform.release()}", "✓"))
 
     table = Table(show_header=True, header_style="bold cyan", box=None, padding=(0, 2))
@@ -398,7 +379,6 @@ def cmd_lint(app_file: str) -> None:
 
     try:
         from pyui.compiler.discovery import discover_app
-
         AppClass = discover_app(app_file)
     except Exception as exc:
         console.print(f"[red]Error:[/red] {exc}")
@@ -415,19 +395,17 @@ def cmd_lint(app_file: str) -> None:
         raise SystemExit(1) from None
 
 
-# ── storybook ───────────────────────────────────────────────────────────────
+# ── storybook ─────────────────────────────────────────────────────────────────
 
 
 @main.command("storybook")
 @click.option("--port", "-p", default=9000, show_default=True, help="Storybook port.")
-@click.option(
-    "--no-browser", is_flag=True, default=False, help="Do not open browser automatically."
-)
+@click.option("--no-browser", is_flag=True, default=False, help="Do not open browser automatically.")
 def cmd_storybook(port: int, no_browser: bool) -> None:
     """Open the component storybook (gallery)."""
     from pyui.cli.storybook import run_storybook
 
-    console.print("[bold cyan]Opening PyUI Storybook...[/bold cyan]")
+    console.print("[bold cyan]Opening Zeno Storybook...[/bold cyan]")
     run_storybook(port=port, open_browser=not no_browser)
 
 
@@ -436,13 +414,13 @@ def cmd_storybook(port: int, no_browser: bool) -> None:
 
 @main.command("info")
 def cmd_info() -> None:
-    """Show PyUI version and project info."""
+    """Show Zeno version and project info."""
     console.print(
         Panel.fit(
-            f"[bold cyan]PyUI Framework[/bold cyan] [dim]v{pyui.__version__}[/dim]\n"
+            f"[bold cyan]Zeno[/bold cyan] [dim]v{pyui.__version__}[/dim]\n"
             "[dim]Write Python. Render anywhere.[/dim]\n\n"
-            f"[dim]Docs    :[/dim] https://pyui.dev\n"
-            f"[dim]GitHub  :[/dim] https://github.com/pyui-framework/pyui\n"
+            f"[dim]Docs    :[/dim] https://zeno-py.dev\n"
+            f"[dim]GitHub  :[/dim] https://github.com/12errh/zeno-py\n"
             f"[dim]License :[/dim] MIT",
             box=box.ASCII,
             border_style="cyan",

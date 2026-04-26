@@ -1,7 +1,7 @@
 """
-PyUI Example — ML Model Inference UI
+Zeno Example — ML Model Inference UI
 
-Run with: pyui run examples/ml-demo/app.py
+Run with: zeno run examples/ml-demo/app.py
 """
 
 import random

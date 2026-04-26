@@ -1,7 +1,7 @@
 """
-PyUI Example — Blog / Content Site
+Zeno Example — Blog / Content Site
 
-Run with: pyui run examples/blog/app.py
+Run with: zeno run examples/blog/app.py
 """
 
 from pyui import App, Badge, Button, Container, Flex, Grid, Heading, Nav, Page, Text
@@ -19,9 +19,9 @@ PyUI lets you build production-grade UIs in pure Python.
 ## Installation
 
 ```bash
-pip install pyui-framework
-pyui new my-app
-pyui run
+pip install zeno-py
+zeno new my-app
+zeno run
 ```
 
 ## Your first component

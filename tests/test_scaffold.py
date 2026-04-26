@@ -68,4 +68,4 @@ def test_scaffold_requirements_has_pyui(tmp_path: Path) -> None:
     os.chdir(tmp_path)
     project = create_project("req-test", template="blank")
     reqs = (project / "requirements.txt").read_text(encoding="utf-8")
-    assert "pyui-framework" in reqs
+    assert "zeno-py" in reqs
