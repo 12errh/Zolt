@@ -168,6 +168,38 @@ def cmd_publish(name: str | None) -> None:
     console.print("[yellow]![/yellow]  [bold]pyui publish[/bold] is not yet implemented (Phase 5).")
 
 
+# ── search ────────────────────────────────────────────────────────────────────
+
+
+@main.command("search")
+@click.argument("query")
+def cmd_search(query: str) -> None:
+    """Search PyPI for PyUI component packages matching QUERY."""
+    import json as _json
+    import urllib.parse
+    import urllib.request
+
+    search_term = f"pyui-{query}" if not query.startswith("pyui") else query
+    url = f"https://pypi.org/pypi/{urllib.parse.quote(search_term)}/json"
+
+    console.print(f"[dim]Searching PyPI for[/dim] [cyan]{search_term}[/cyan]...\n")
+
+    try:
+        with urllib.request.urlopen(url, timeout=5) as resp:  # noqa: S310
+            data = _json.loads(resp.read())
+        info = data["info"]
+        console.print(f"[bold cyan]{info['name']}[/bold cyan] [dim]v{info['version']}[/dim]")
+        console.print(f"  {info.get('summary', 'No description.')}")
+        console.print(f"  [dim]Install:[/dim] pip install {info['name']}")
+    except Exception:
+        # Fall back to simple PyPI search via the search endpoint
+        console.print(
+            f"[yellow]![/yellow]  Package [cyan]{search_term}[/cyan] not found on PyPI.\n"
+            f"  Browse community packages at [link=https://pypi.org/search/?q=pyui-]"
+            f"https://pypi.org/search/?q=pyui-[/link]"
+        )
+
+
 # ── doctor ────────────────────────────────────────────────────────────────────
 
 

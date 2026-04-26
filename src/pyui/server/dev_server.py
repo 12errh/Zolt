@@ -65,6 +65,34 @@ class PyUIDevServer:
 
     # ── aiohttp request handlers ──────────────────────────────────────────────
 
+    async def _handle_theme(self, request: web.Request) -> web.Response:
+        """
+        POST /pyui-api/theme/{name}
+
+        Hot-swaps the app theme at runtime and returns the new CSS vars.
+        """
+        theme_name = request.match_info["name"]
+        from pyui.exceptions import ThemeError
+        from pyui.theme.engine import build_theme, tokens_to_css_vars
+
+        try:
+            tokens = build_theme(theme_name)
+        except ThemeError as exc:
+            return web.Response(
+                status=400,
+                text=json.dumps({"error": str(exc)}),
+                content_type="application/json",
+            )
+
+        # Update the app's theme attribute so subsequent page renders use it
+        self.app_class.theme = theme_name
+
+        css = tokens_to_css_vars(tokens)
+        return web.Response(
+            text=json.dumps({"theme": theme_name, "css": css}),
+            content_type="application/json",
+        )
+
     async def _handle_page(self, request: web.Request) -> web.Response:
         """Serve the HTML page for the requested route."""
         path = request.path
@@ -216,6 +244,7 @@ class PyUIDevServer:
         """Build and return the configured aiohttp Application."""
         aio_app = web.Application()
         aio_app.router.add_post("/pyui-api/event/{handler_id}", self._handle_event)
+        aio_app.router.add_post("/pyui-api/theme/{name}", self._handle_theme)
         aio_app.router.add_get("/pyui-api/ws", self._handle_ws)
         aio_app.router.add_get("/{path:.*}", self._handle_page)
         return aio_app

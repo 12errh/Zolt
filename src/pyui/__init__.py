@@ -57,6 +57,7 @@ from pyui.components.navigation import (
     Tabs,
 )
 from pyui.page import Page
+from pyui.plugins import PyUIPlugin, register_component
 from pyui.state.computed import computed
 from pyui.state.reactive import reactive
 from pyui.state.store import store
@@ -69,6 +70,8 @@ __all__ = [
     "computed",
     "store",
     "BaseComponent",
+    "PyUIPlugin",
+    "register_component",
     # Layout
     "Container",
     "Divider",

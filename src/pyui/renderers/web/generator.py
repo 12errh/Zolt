@@ -285,6 +285,7 @@ _PAGE_TEMPLATE = """\
     {css_vars}
     {extra_css}
   </style>
+  {dark_mode_script}
   {favicon_tag}
 </head>
 <body class="bg-white text-gray-900 min-h-screen antialiased theme-transition"
@@ -405,20 +406,18 @@ _PAGE_TEMPLATE = """\
 
 def _build_tokens(theme: str | dict[str, str]) -> dict[str, str]:
     """Merge DEFAULT_TOKENS with theme overrides → flat token dict."""
-    tokens = dict(DEFAULT_TOKENS)
-    overrides = BUILT_IN_THEMES.get(theme, {}) if isinstance(theme, str) else theme
-    tokens.update(overrides)
-    return tokens
+    from pyui.theme.engine import build_theme
+    try:
+        return build_theme(theme)
+    except Exception:
+        # Fallback to defaults if theme is invalid
+        return dict(DEFAULT_TOKENS)
 
 
 def _tokens_to_css_vars(tokens: dict[str, str]) -> str:
     """Render tokens as a CSS :root block with --pyui-* variables."""
-    lines = [":root {"]
-    for key, value in tokens.items():
-        css_name = "--pyui-" + key.replace(".", "-")
-        lines.append(f"  {css_name}: {value};")
-    lines.append("}")
-    return "\n".join(lines)
+    from pyui.theme.engine import tokens_to_css_vars
+    return tokens_to_css_vars(tokens)
 
 
 # ── Component renderers ───────────────────────────────────────────────────────
@@ -1524,6 +1523,8 @@ class WebGenerator:
         if favicon:
             favicon_tag = f'<link rel="icon" href="{html_module.escape(favicon)}" />'
 
+        from pyui.theme.engine import dark_mode_script
+
         return _PAGE_TEMPLATE.format(
             title=html_module.escape(
                 ir_page.title or self.ir_tree.app_meta.get("name", "PyUI App")
@@ -1531,6 +1532,7 @@ class WebGenerator:
             description=html_module.escape(self.ir_tree.app_meta.get("description", "")),
             css_vars=css_vars,
             extra_css="",
+            dark_mode_script=dark_mode_script(),
             favicon_tag=favicon_tag,
             alpine_data=alpine_data,
             layout_class=layout_class,

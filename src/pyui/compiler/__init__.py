@@ -42,12 +42,21 @@ def compile_app(
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
 
+    # Load plugins before compiling
+    from pyui.plugins.loader import load_plugins
+
+    plugins = load_plugins(app_class)
+
     if target == "web":
         from pyui.renderers.web.generator import WebGenerator
 
         ir = build_ir_tree(app_class)
+        for p in plugins:
+            p.on_compile_end(ir)
         gen = WebGenerator(ir)
         gen.write_to_disk(out)
+        for p in plugins:
+            p.on_build(out)
     elif target == "desktop":
         # Desktop target: launch the native window (no static output)
         from pyui.renderers.desktop import run_desktop_app
