@@ -166,7 +166,15 @@ def cmd_build(target: str, out: str, app_file: str) -> None:
 
     try:
         output_path = compile_app(AppClass, target=target, output_dir=out)
-        console.print(f"[green]Built[/green] [cyan]{app_file}[/cyan] -> [cyan]{output_path}[/cyan]")
+        if target == "web":
+            console.print(
+                f"[green]Built[/green] [cyan]{app_file}[/cyan] → [cyan]{output_path}[/cyan]"
+            )
+        else:
+            console.print(
+                f"[green]Built[/green] [cyan]{app_file}[/cyan] → [cyan]{output_path}[/cyan]\n"
+                f"  Run with: [dim]python {output_path}/run.py[/dim]"
+            )
     except NotImplementedError as exc:
         console.print(f"[yellow]![/yellow]  {exc}")
 
