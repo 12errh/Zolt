@@ -1,12 +1,12 @@
-# Contributing to Zeno
+# Contributing to Zolt
 
 Thank you for your interest in contributing! 🎉
 
 ## Setup
 
 ```bash
-git clone https://github.com/12errh/zeno-py
-cd zeno-py
+git clone https://github.com/12errh/zolt
+cd zolt
 pip install -e ".[dev]"
 pre-commit install
 ```
@@ -44,7 +44,7 @@ mypy src/
 ## Reporting Issues
 
 Use GitHub Issues. Include:
-- Zeno version (`zeno --version`)
+- Zolt version (`zolt --version`)
 - Python version
 - OS
 - Minimal reproduction code

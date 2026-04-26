@@ -7,6 +7,21 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
 
+## [1.1.0] - 2026-04-26
+
+### Changed
+- Package renamed from `zeno-py` → `zolt` (PyPI name conflict resolved)
+- CLI command renamed from `zeno` → `zolt`
+- All branding updated: Zeno → Zolt throughout codebase
+- GitHub repo renamed to `12errh/zolt`
+- Docs URL updated to `https://zolt.dev`
+- Version bump 1.0.0 → 1.1.0 to reflect the rename
+
+### Fixed
+- PyPI upload blocked by name similarity to existing `zeno` package
+
+---
+
 ## [1.0.0] - 2026-04-26
 
 ### 🎉 First stable release

@@ -9,11 +9,11 @@
 
 PyUI is an open-source Python UI framework. The core idea: write your entire UI in pure Python, and the framework compiles it to whatever target you need — currently web (HTML + Tailwind CSS + Alpine.js), with desktop (Qt/tkinter) and terminal (Rich TUI) planned.
 
-- **Version:** 1.0.0
+- **Version:** 1.1.0
 - **Python:** 3.10+
 - **License:** MIT
-- **Repo:** https://github.com/12errh/pyui
-- **Status:** v1.0.0 — All phases complete
+- **Repo:** https://github.com/12errh/zolt
+- **Status:** v1.1.0 — Live on PyPI as `zolt`
 
 ---
 

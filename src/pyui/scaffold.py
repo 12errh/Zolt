@@ -1,5 +1,5 @@
 """
-Project scaffolder — implements ``zeno new <name>``.
+Project scaffolder — implements ``zolt new <name>``.
 
 Creates a minimal working project directory with app.py, requirements.txt,
 and README.md. The ``--template`` flag selects a richer starting point.
@@ -13,9 +13,9 @@ from pathlib import Path
 
 _BLANK_APP = '''\
 """
-{name} — built with Zeno.
+{name} — built with Zolt.
 
-Run with: zeno run
+Run with: zolt run
 """
 
 from pyui import App, Button, Flex, Heading, Page, Text
@@ -28,7 +28,7 @@ class HomePage(Page):
     def compose(self) -> None:
         with Flex(direction="col", align="center", justify="center", gap=6):
             Heading("{name}", level=1)
-            Text("Welcome to your new Zeno app.").style("muted")
+            Text("Welcome to your new Zolt app.").style("muted")
             Button("Get Started").style("primary").size("lg")
 
 
@@ -39,9 +39,9 @@ class {class_name}(App):
 
 _DASHBOARD_APP = '''\
 """
-{name} — dashboard template built with Zeno.
+{name} — dashboard template built with Zolt.
 
-Run with: zeno run
+Run with: zolt run
 """
 
 from pyui import App, Badge, Flex, Grid, Heading, Nav, Page, Stat, Table, Text
@@ -106,7 +106,7 @@ class {class_name}(App):
 '''
 
 _REQUIREMENTS = """\
-zeno-py>=1.0.0
+zolt>=1.0.0
 """
 
 _README = """\
@@ -117,17 +117,17 @@ Built with [PyUI](https://github.com/12errh/pyui).
 ## Getting started
 
 ```bash
-pip install zeno-py
-zeno run
+pip install zolt
+zolt run
 ```
 
 ## Commands
 
 ```bash
-zeno run              # Start dev server
-zeno run --target desktop  # Open as desktop app
-zeno run --target cli      # Render in terminal
-zeno build            # Build for production
+zolt run              # Start dev server
+zolt run --target desktop  # Open as desktop app
+zolt run --target cli      # Render in terminal
+zolt build            # Build for production
 ```
 """
 

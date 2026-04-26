@@ -1,7 +1,7 @@
 """
-Zeno Example — ML Model Inference UI
+Zolt Example — ML Model Inference UI
 
-Run with: zeno run examples/ml-demo/app.py
+Run with: zolt run examples/ml-demo/app.py
 """
 
 import random

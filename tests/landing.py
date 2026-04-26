@@ -161,7 +161,7 @@ class LandingPage(Page):
 
                 # CTA buttons
                 with Flex(align="center", justify="center", gap=3).className("flex-wrap"):
-                    Button("pip install zeno-py").style("primary").size("lg").icon("terminal")
+                    Button("pip install zolt").style("primary").size("lg").icon("terminal")
                     Button("View on GitHub").style("ghost").size("lg").icon("github")
 
                 # Social proof
@@ -468,7 +468,7 @@ class App(App):
                     "Install PyUI, run the storybook, and ship your first UI today."
                 ).className("text-gray-400 text-lg mb-10 font-light").paragraph()
 
-                _code_block("pip install zeno-py\npyui storybook")
+                _code_block("pip install zolt\nzolt storybook")
 
                 with Flex(align="center", justify="center", gap=3).className("mt-8 flex-wrap"):
                     Button("Read the Docs").style("ghost").size("lg").icon("book-open")

@@ -1,7 +1,7 @@
 """
-Zeno CLI entry point.
+Zolt CLI entry point.
 
-All subcommands live under the ``zeno`` group. Run ``zeno --help`` for usage.
+All subcommands live under the ``zolt`` group. Run ``zolt --help`` for usage.
 """
 
 from __future__ import annotations
@@ -24,13 +24,13 @@ console = Console()
     context_settings={"help_option_names": ["-h", "--help"]},
     invoke_without_command=True,
 )
-@click.version_option(pyui.__version__, "-V", "--version", prog_name="Zeno")
+@click.version_option(pyui.__version__, "-V", "--version", prog_name="Zolt")
 @click.option("-v", "--verbose", is_flag=True, help="Enable verbose (DEBUG) logging.")
 @click.pass_context
 def main(ctx: click.Context, verbose: bool) -> None:
     """
     \b
-    Zeno -- Write Python. Render anywhere.
+    Zolt -- Write Python. Render anywhere.
     Web | Desktop | CLI from a single Python codebase.
     """
     configure_logging("DEBUG" if verbose else "INFO")
@@ -38,8 +38,8 @@ def main(ctx: click.Context, verbose: bool) -> None:
     if ctx.invoked_subcommand is None:
         console.print(
             Panel.fit(
-                f"[bold cyan]Zeno[/bold cyan] [dim]v{pyui.__version__}[/dim]\n"
-                "[dim]Run [bold]zeno --help[/bold] to see available commands.[/dim]",
+                f"[bold cyan]Zolt[/bold cyan] [dim]v{pyui.__version__}[/dim]\n"
+                "[dim]Run [bold]zolt --help[/bold] to see available commands.[/dim]",
                 box=box.ASCII,
                 border_style="cyan",
             )
@@ -66,7 +66,7 @@ def main(ctx: click.Context, verbose: bool) -> None:
     help="Default render target.",
 )
 def cmd_new(name: str, template: str, target: str) -> None:
-    """Scaffold a new Zeno project called NAME."""
+    """Scaffold a new Zolt project called NAME."""
     from pyui.scaffold import create_project
 
     try:
@@ -74,7 +74,7 @@ def cmd_new(name: str, template: str, target: str) -> None:
         console.print(
             f"[green]✓[/green] Created [cyan]{name}[/cyan] at [dim]{project_path}[/dim]\n\n"
             f"  [dim]cd {name}[/dim]\n"
-            f"  [dim]zeno run[/dim]"
+            f"  [dim]zolt run[/dim]"
         )
     except Exception as exc:
         console.print(f"[red]Error:[/red] {exc}")
@@ -100,7 +100,7 @@ def cmd_new(name: str, template: str, target: str) -> None:
 )
 @click.argument("app_file", default="app.py", required=False)
 def cmd_run(target: str, port: int, host: str, no_browser: bool, app_file: str) -> None:
-    """Start the Zeno dev server (APP_FILE defaults to app.py)."""
+    """Start the Zolt dev server (APP_FILE defaults to app.py)."""
     try:
         from pyui.compiler.discovery import discover_app
 
@@ -197,7 +197,7 @@ def cmd_build(target: str, out: str, app_file: str) -> None:
 @click.option("--name", default=None, help="Override package name.")
 @click.option("--build-only", is_flag=True, default=False, help="Build dist/ but do not upload.")
 def cmd_publish(name: str | None, build_only: bool) -> None:
-    """Package and publish a Zeno component to PyPI."""
+    """Package and publish a Zolt component to PyPI."""
     import json
     import subprocess
     import sys
@@ -209,7 +209,7 @@ def cmd_publish(name: str | None, build_only: bool) -> None:
             "[red]Error:[/red] No [cyan]pyui.json[/cyan] found in the current directory.\n\n"
             "Create one with the following structure:\n"
             '[dim]{\n'
-            '  "name": "zeno-my-component",\n'
+            '  "name": "zolt-my-component",\n'
             '  "version": "1.0.0",\n'
             '  "pyui_version": ">=1.0.0",\n'
             '  "components": ["MyComponent"],\n'
@@ -275,12 +275,12 @@ def cmd_publish(name: str | None, build_only: bool) -> None:
 @main.command("search")
 @click.argument("query")
 def cmd_search(query: str) -> None:
-    """Search PyPI for Zeno component packages matching QUERY."""
+    """Search PyPI for Zolt component packages matching QUERY."""
     import json as _json
     import urllib.parse
     import urllib.request
 
-    search_term = f"zeno-{query}" if not query.startswith("zeno") else query
+    search_term = f"zolt-{query}" if not query.startswith("zolt") else query
     url = f"https://pypi.org/pypi/{urllib.parse.quote(search_term)}/json"
 
     console.print(f"[dim]Searching PyPI for[/dim] [cyan]{search_term}[/cyan]...\n")
@@ -295,8 +295,8 @@ def cmd_search(query: str) -> None:
     except Exception:
         console.print(
             f"[yellow]![/yellow]  Package [cyan]{search_term}[/cyan] not found on PyPI.\n"
-            f"  Browse community packages at [link=https://pypi.org/search/?q=zeno-]"
-            f"https://pypi.org/search/?q=zeno-[/link]"
+            f"  Browse community packages at [link=https://pypi.org/search/?q=zolt-]"
+            f"https://pypi.org/search/?q=zolt-[/link]"
         )
 
 
@@ -315,7 +315,7 @@ def cmd_doctor() -> None:
 
     from rich.table import Table
 
-    console.print("[bold]Zeno Doctor[/bold]\n")
+    console.print("[bold]Zolt Doctor[/bold]\n")
 
     results: list[tuple[str, str, str]] = []
 
@@ -325,12 +325,12 @@ def cmd_doctor() -> None:
 
     try:
         with urllib.request.urlopen(  # noqa: S310
-            "https://pypi.org/pypi/zeno-py/json", timeout=3
+            "https://pypi.org/pypi/zolt/json", timeout=3
         ) as r:
             latest = _json.loads(r.read())["info"]["version"]
         up_to_date = latest == pyui.__version__
         results.append((
-            "Zeno version",
+            "Zolt version",
             f"{pyui.__version__} (latest: {latest})",
             "✓" if up_to_date else f"↑ {latest} available",
         ))
@@ -342,7 +342,7 @@ def cmd_doctor() -> None:
             ver = importlib.metadata.version(dep)
             results.append((f"dep: {dep}", ver, "✓"))
         except importlib.metadata.PackageNotFoundError:
-            results.append((f"dep: {dep}", "NOT FOUND", "✗ pip install zeno-py"))
+            results.append((f"dep: {dep}", "NOT FOUND", "✗ pip install zolt"))
 
     for port in [8000, 9000]:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -405,7 +405,7 @@ def cmd_storybook(port: int, no_browser: bool) -> None:
     """Open the component storybook (gallery)."""
     from pyui.cli.storybook import run_storybook
 
-    console.print("[bold cyan]Opening Zeno Storybook...[/bold cyan]")
+    console.print("[bold cyan]Opening Zolt Storybook...[/bold cyan]")
     run_storybook(port=port, open_browser=not no_browser)
 
 
@@ -417,10 +417,10 @@ def cmd_info() -> None:
     """Show Zeno version and project info."""
     console.print(
         Panel.fit(
-            f"[bold cyan]Zeno[/bold cyan] [dim]v{pyui.__version__}[/dim]\n"
+            f"[bold cyan]Zolt[/bold cyan] [dim]v{pyui.__version__}[/dim]\n"
             "[dim]Write Python. Render anywhere.[/dim]\n\n"
-            f"[dim]Docs    :[/dim] https://zeno-py.dev\n"
-            f"[dim]GitHub  :[/dim] https://github.com/12errh/zeno-py\n"
+            f"[dim]Docs    :[/dim] https://zolt.dev\n"
+            f"[dim]GitHub  :[/dim] https://github.com/12errh/zolt\n"
             f"[dim]License :[/dim] MIT",
             box=box.ASCII,
             border_style="cyan",

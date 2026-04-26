@@ -1,7 +1,7 @@
 """
-Zeno Example — Todo App
+Zolt Example — Todo App
 
-Run with: zeno run examples/todo/app.py
+Run with: zolt run examples/todo/app.py
 """
 
 from pyui import App, Badge, Button, Flex, Heading, Input, Page, Text, reactive

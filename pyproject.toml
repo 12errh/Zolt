@@ -3,13 +3,13 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "zeno-py"
-version = "1.0.0"
+name = "zolt"
+version = "1.1.0"
 description = "Write Python, render anywhere — web, desktop, and CLI from one codebase."
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.10"
-authors = [{ name = "Zeno Core Team" }]
+authors = [{ name = "Zolt Core Team" }]
 keywords = ["ui", "framework", "web", "desktop", "cli", "reactive", "fullstack"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -47,19 +47,19 @@ dev = [
 ]
 
 [project.scripts]
-zeno = "pyui.cli.main:main"
+zolt = "pyui.cli.main:main"
 
 [project.urls]
-Homepage = "https://github.com/12errh/zeno-py"
-Documentation = "https://zeno-py.dev"
-Repository = "https://github.com/12errh/zeno-py"
-Issues = "https://github.com/12errh/zeno-py/issues"
+Homepage = "https://github.com/12errh/zolt"
+Documentation = "https://zolt.dev"
+Repository = "https://github.com/12errh/zolt"
+Issues = "https://github.com/12errh/zolt/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/pyui"]
 
 [tool.hatch.envs.default]
-dependencies = ["zeno-py[dev]"]
+dependencies = ["zolt[dev]"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

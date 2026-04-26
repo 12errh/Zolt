@@ -1,7 +1,7 @@
 """
-Zeno Example — Blog / Content Site
+Zolt Example — Blog / Content Site
 
-Run with: zeno run examples/blog/app.py
+Run with: zolt run examples/blog/app.py
 """
 
 from pyui import App, Badge, Button, Container, Flex, Grid, Heading, Nav, Page, Text
@@ -19,9 +19,9 @@ PyUI lets you build production-grade UIs in pure Python.
 ## Installation
 
 ```bash
-pip install zeno-py
-zeno new my-app
-zeno run
+pip install zolt
+zolt new my-app
+zolt run
 ```
 
 ## Your first component

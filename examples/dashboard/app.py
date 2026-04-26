@@ -1,7 +1,7 @@
 """
-Zeno Example — Analytics Dashboard
+Zolt Example — Analytics Dashboard
 
-Run with: zeno run examples/dashboard/app.py
+Run with: zolt run examples/dashboard/app.py
 """
 
 from pyui import (
