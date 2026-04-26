@@ -1,7 +1,7 @@
 # PyUI — Product & Technical Requirements Document
 
 **Version:** 0.1.0  
-**Status:** Phase 4 Complete — Phase 5 In Progress  
+**Status:** Phase 6 Complete — Phase 7 Production Hardening Next  
 **Author:** PyUI Core Team  
 **Last Updated:** April 2026
 
@@ -39,8 +39,8 @@
    - Phase 2: Component Library (Done)
    - Phase 3: State & Reactivity (Done)
    - Phase 4: Desktop & CLI Renderers (Done)
-   - Phase 5: Theme Engine & Marketplace
-   - Phase 6: Developer Tooling & Hot Reload
+   - Phase 5: Theme Engine & Marketplace (Done)
+   - Phase 6: Developer Tooling & Hot Reload (Done)
    - Phase 7: Production Hardening
    - Phase 8: Public Launch
 5. [Unit Test Plan — Per Phase](#5-unit-test-plan--per-phase)

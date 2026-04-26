@@ -13,7 +13,7 @@ PyUI is an open-source Python UI framework. The core idea: write your entire UI 
 - **Python:** 3.10+
 - **License:** MIT
 - **Repo:** https://github.com/12errh/pyui
-- **Status:** Phases 0–3 complete, Phase 4 in progress
+- **Status:** Phases 0–6 complete, Phase 7 next
 
 ---
 
@@ -336,16 +336,17 @@ Entry point: `pyui` → `src/pyui/cli/main.py:main` (Click group)
 
 | Command | Status | Notes |
 |---|---|---|
-| `pyui new <name>` | Stub | Phase 0 placeholder |
-| `pyui run [app.py]` | ✅ Working | Starts dev server, opens browser |
-| `pyui build [app.py]` | ✅ Working | Writes HTML to `./dist/` |
+| `pyui new <name>` | ✅ Working | Scaffold with blank/dashboard/landing/admin/auth templates |
+| `pyui run [app.py]` | ✅ Working | web (dev server + hot reload), desktop (tkinter), cli (Rich) |
+| `pyui build [app.py]` | ✅ Working | web → HTML/CSS/JS; desktop/cli → run.py launcher |
 | `pyui storybook` | ✅ Working | Component gallery on port 9000 |
-| `pyui doctor` | ✅ Working | Python version check |
-| `pyui publish` | Stub | Phase 5 |
-| `pyui lint` | Stub | Phase 6 |
+| `pyui doctor` | ✅ Working | Python, deps, ports, PyPI version check |
+| `pyui lint [app.py]` | ✅ Working | Missing alt, empty pages, duplicate routes, bad variants |
+| `pyui search <query>` | ✅ Working | Searches PyPI for pyui-* packages |
+| `pyui publish` | 🚧 Stub | Phase 5 — not yet implemented |
 | `pyui info` | ✅ Working | Version info panel |
 
-`pyui run` options: `--port`, `--host`, `--no-browser`, `--target` (only `web` works now)
+`pyui run` options: `--port`, `--host`, `--no-browser`, `--target` (web/desktop/cli)
 
 ---
 
@@ -441,13 +442,14 @@ pyui storybook
 | Phase | Name | Status |
 |---|---|---|
 | 0 | Project setup & foundations | ✅ Complete |
-| 1 | Core layout & foundational components | ✅ Complete |
-| 2 | Full component library (42+ components) + CLI | ✅ Complete |
+| 1 | Core compiler (web target) | ✅ Complete |
+| 2 | Full component library (42+ components) + storybook | ✅ Complete |
 | 3 | State & reactivity (ReactiveVar, computed, store, persistence, x-model) | ✅ Complete |
-| 4 | Desktop & CLI renderers | 🚧 In Progress |
-| 5 | Theme engine & component marketplace | 📋 Planned |
-| 6 | Developer tooling, hot reload, `pyui new`, `pyui lint` | 📋 Planned |
-| 7 | Production hardening, performance, docs site | 📋 Planned |
+| 4 | Desktop (tkinter) & CLI (Rich) renderers | ✅ Complete |
+| 5 | Theme engine & plugin system | ✅ Complete |
+| 6 | Hot reload, linter, scaffold, doctor, dev tools panel | ✅ Complete |
+| 7 | Production hardening, performance, docs site | 🚧 Next |
+| 8 | Public launch | 📋 Planned |
 
 ---
 
@@ -486,15 +488,16 @@ src/pyui/renderers/cli/generator.py        # Rich TUI renderer
 
 ## Known Gaps & Things to Watch Out For
 
-- `pyui new` is a stub — scaffolding not implemented yet
-- Hot reload (WebSocket) is a stub — only sends `connected` message
-- `pyui lint` and `pyui publish` are stubs
+- `pyui publish` is a stub — marketplace publishing not implemented yet (Phase 5 remainder)
+- VS Code extension — Phase 6 stretch goal, not built
+- `pyui build --target all` — routes to web only; desktop/cli each need separate build calls
+- Hot reload re-imports the module on every file change — if the app has side effects on import, they will re-run
 - `Text.inject_html()` and `RawHTML` bypass XSS protection — document clearly
-- `REACTIVE_VAR_REGISTRY` is a module-level dict — not thread-safe for multi-user servers (fine for dev server, needs fixing for production)
+- `REACTIVE_VAR_REGISTRY` is a module-level dict — not thread-safe for multi-user servers (fine for dev server)
 - `_handler_registry` in `ir.py` is also module-level — same caveat
 - `discover_app()` mutates `sys.path` — fine for CLI use, not for library use
 - Multiple App subclasses in one file: only the first is used (warns but doesn't error)
-- `Page.compose()` clears `page.children` before each call to prevent duplication on hot-reload — be aware if you mix imperative `.add()` with `compose()`
+- `Page.compose()` clears `page.children` before each call to prevent duplication on hot-reload
 
 ---
 
