@@ -170,6 +170,13 @@ def cmd_build(target: str, out: str, app_file: str) -> None:
             console.print(
                 f"[green]Built[/green] [cyan]{app_file}[/cyan] → [cyan]{output_path}[/cyan]"
             )
+        elif target == "all":
+            console.print(
+                f"[green]Built[/green] [cyan]{app_file}[/cyan] → [cyan]{output_path}[/cyan]\n"
+                f"  [dim]{output_path}/web/[/dim]     HTML/CSS/JS\n"
+                f"  [dim]{output_path}/desktop/[/dim]  python run.py\n"
+                f"  [dim]{output_path}/cli/[/dim]      python run.py"
+            )
         else:
             console.print(
                 f"[green]Built[/green] [cyan]{app_file}[/cyan] → [cyan]{output_path}[/cyan]\n"
@@ -184,9 +191,85 @@ def cmd_build(target: str, out: str, app_file: str) -> None:
 
 @main.command("publish")
 @click.option("--name", default=None, help="Override package name.")
-def cmd_publish(name: str | None) -> None:
-    """Publish a component package to the PyUI marketplace."""
-    console.print("[yellow]![/yellow]  [bold]pyui publish[/bold] is not yet implemented (Phase 5).")
+@click.option("--build-only", is_flag=True, default=False, help="Build dist/ but do not upload.")
+def cmd_publish(name: str | None, build_only: bool) -> None:
+    """Package and publish a PyUI component to PyPI."""
+    import json
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    # 1. Validate pyui.json manifest
+    manifest_path = Path("pyui.json")
+    if not manifest_path.exists():
+        console.print(
+            "[red]Error:[/red] No [cyan]pyui.json[/cyan] found in the current directory.\n\n"
+            "Create one with the following structure:\n"
+            '[dim]{\n'
+            '  "name": "pyui-my-component",\n'
+            '  "version": "1.0.0",\n'
+            '  "pyui_version": ">=0.1.0",\n'
+            '  "components": ["MyComponent"],\n'
+            '  "targets": ["web"],\n'
+            '  "author": "Your Name",\n'
+            '  "license": "MIT"\n'
+            '}[/dim]'
+        )
+        raise SystemExit(1) from None
+
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        console.print(f"[red]Error:[/red] Invalid pyui.json: {exc}")
+        raise SystemExit(1) from None
+
+    required_fields = ["name", "version", "components"]
+    missing = [f for f in required_fields if f not in manifest]
+    if missing:
+        console.print(f"[red]Error:[/red] pyui.json is missing required fields: {missing}")
+        raise SystemExit(1) from None
+
+    pkg_name = name or manifest["name"]
+    pkg_version = manifest["version"]
+
+    # 2. Check pyproject.toml or setup.py exists
+    has_pyproject = Path("pyproject.toml").exists()
+    has_setup = Path("setup.py").exists()
+    if not has_pyproject and not has_setup:
+        console.print(
+            "[red]Error:[/red] No [cyan]pyproject.toml[/cyan] or [cyan]setup.py[/cyan] found.\n"
+            "PyUI packages are standard Python packages — add a pyproject.toml to build."
+        )
+        raise SystemExit(1) from None
+
+    console.print(f"[bold]Publishing[/bold] [cyan]{pkg_name}[/cyan] v[dim]{pkg_version}[/dim]\n")
+
+    # 3. Build the distribution
+    console.print("[dim]Building distribution...[/dim]")
+    build_cmd = [sys.executable, "-m", "build"]
+    result = subprocess.run(build_cmd, capture_output=True, text=True)  # noqa: S603
+    if result.returncode != 0:
+        console.print(f"[red]Build failed:[/red]\n{result.stderr}")
+        console.print("[dim]Tip: pip install build[/dim]")
+        raise SystemExit(1) from None
+    console.print("[green]✓[/green] Distribution built in [dim]dist/[/dim]")
+
+    if build_only:
+        console.print("\n[dim]--build-only: skipping upload.[/dim]")
+        return
+
+    # 4. Upload to PyPI via twine
+    console.print("[dim]Uploading to PyPI...[/dim]")
+    upload_cmd = [sys.executable, "-m", "twine", "upload", "dist/*"]
+    result = subprocess.run(upload_cmd, text=True)  # noqa: S603
+    if result.returncode != 0:
+        console.print("[red]Upload failed.[/red] [dim]Tip: pip install twine[/dim]")
+        raise SystemExit(1) from None
+
+    console.print(
+        f"\n[green]✓[/green] Published [cyan]{pkg_name}[/cyan] v{pkg_version} to PyPI.\n"
+        f"  Install with: [dim]pip install {pkg_name}[/dim]"
+    )
 
 
 # ── search ────────────────────────────────────────────────────────────────────

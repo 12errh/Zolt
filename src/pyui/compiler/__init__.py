@@ -141,9 +141,14 @@ def compile_app(
     elif target == "cli":
         _write_launcher(app_class, out, target="cli")
 
+    elif target == "all":
+        # Build all three targets into separate subdirectories
+        for t in ("web", "desktop", "cli"):
+            compile_app(app_class, target=t, output_dir=str(out / t))
+
     else:
         raise NotImplementedError(
-            f"Target '{target}' is not yet implemented. Available targets: 'web', 'desktop', 'cli'."
+            f"Target '{target}' is not yet implemented. Available targets: 'web', 'desktop', 'cli', 'all'."
         )
 
     return out
