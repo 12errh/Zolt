@@ -1,8 +1,8 @@
 """
 PyUI development server — aiohttp-based.
 
-Serves compiled HTML pages, handles event POSTs from the browser, and
-provides a WebSocket stub for hot-reload (implemented in Phase 6).
+Serves compiled HTML pages, handles event POSTs from the browser,
+hot-reloads on file changes via WebSocket, and provides a theme-swap API.
 
 Usage (internal — called by the CLI ``run`` command)::
 
@@ -15,7 +15,9 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import json
+import threading
 import webbrowser
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from aiohttp import web
@@ -42,6 +44,9 @@ class PyUIDevServer:
     port : int
     open_browser : bool
         Whether to open the default browser on startup.
+    watch_file : str | None
+        Path to the app file to watch for hot-reload. If ``None``, hot
+        reload is disabled.
     """
 
     def __init__(
@@ -50,27 +55,91 @@ class PyUIDevServer:
         host: str = "localhost",
         port: int = 8000,
         open_browser: bool = True,
+        watch_file: str | None = None,
     ) -> None:
         self.app_class = app_class
         self.host = host
         self.port = port
         self.open_browser = open_browser
+        self.watch_file = watch_file
 
         # Compiled state — rebuilt on hot-reload
         self._ir_tree = build_ir_tree(app_class)
         self._generator = WebGenerator(self._ir_tree)
-
-        # Route → IRPage index for lookups
         self._route_map = {p.route: p for p in self._ir_tree.pages}
 
-    # ── aiohttp request handlers ──────────────────────────────────────────────
+        # Active WebSocket connections for hot-reload broadcasts
+        self._ws_clients: set[web.WebSocketResponse] = set()
+        self._ws_lock = asyncio.Lock()
+
+        # asyncio event loop reference (set when server starts)
+        self._loop: asyncio.AbstractEventLoop | None = None
+
+    # ── Hot reload ────────────────────────────────────────────────────────────
+
+    def _on_file_change(self, changed_path: str) -> None:
+        """Called by the file watcher thread when a .py file changes."""
+        log.debug("Hot reload triggered", path=changed_path)
+
+        # Re-import and rebuild IR on the watcher thread
+        try:
+            from pyui.compiler.ir import clear_registry
+
+            clear_registry()
+            self._ir_tree = build_ir_tree(self.app_class)
+            self._generator = WebGenerator(self._ir_tree)
+            self._route_map = {p.route: p for p in self._ir_tree.pages}
+        except Exception as exc:
+            log.error("Hot reload compile error", error=str(exc))
+            # Broadcast error to browser
+            if self._loop and self._loop.is_running():
+                asyncio.run_coroutine_threadsafe(
+                    self._broadcast({"type": "error", "message": str(exc)}),
+                    self._loop,
+                )
+            return
+
+        # Broadcast reload signal to all connected browsers
+        if self._loop and self._loop.is_running():
+            asyncio.run_coroutine_threadsafe(
+                self._broadcast({"type": "reload"}),
+                self._loop,
+            )
+
+    async def _broadcast(self, message: dict[str, Any]) -> None:
+        """Send *message* to all connected WebSocket clients."""
+        async with self._ws_lock:
+            dead: set[web.WebSocketResponse] = set()
+            for ws in self._ws_clients:
+                try:
+                    await ws.send_json(message)
+                except Exception:
+                    dead.add(ws)
+            self._ws_clients -= dead
+
+    # ── Request handlers ──────────────────────────────────────────────────────
+
+    async def _handle_ws(self, request: web.Request) -> web.WebSocketResponse:
+        """WebSocket endpoint — used for hot-reload broadcasts."""
+        ws = web.WebSocketResponse()
+        await ws.prepare(request)
+        await ws.send_json({"type": "connected", "version": "0.1.0"})
+        log.debug("WebSocket client connected", remote=str(request.remote))
+
+        async with self._ws_lock:
+            self._ws_clients.add(ws)
+
+        try:
+            async for _msg in ws:
+                pass  # clients don't send messages
+        finally:
+            async with self._ws_lock:
+                self._ws_clients.discard(ws)
+
+        return ws
 
     async def _handle_theme(self, request: web.Request) -> web.Response:
-        """
-        POST /pyui-api/theme/{name}
-
-        Hot-swaps the app theme at runtime and returns the new CSS vars.
-        """
+        """POST /pyui-api/theme/{name} — hot-swap the app theme."""
         theme_name = request.match_info["name"]
         from pyui.exceptions import ThemeError
         from pyui.theme.engine import build_theme, tokens_to_css_vars
@@ -84,9 +153,7 @@ class PyUIDevServer:
                 content_type="application/json",
             )
 
-        # Update the app's theme attribute so subsequent page renders use it
         self.app_class.theme = theme_name
-
         css = tokens_to_css_vars(tokens)
         return web.Response(
             text=json.dumps({"theme": theme_name, "css": css}),
@@ -96,16 +163,11 @@ class PyUIDevServer:
     async def _handle_page(self, request: web.Request) -> web.Response:
         """Serve the HTML page for the requested route."""
         path = request.path
-
-        # Normalize: "/" and "" both match the root page
         ir_page = self._route_map.get(path) or self._route_map.get(
             "/" if path == "" else path.rstrip("/")
         )
-
         if ir_page is None:
-            # Try to serve root for any unmatched path (SPA-style fallback)
             ir_page = self._route_map.get("/")
-
         if ir_page is None:
             return web.Response(
                 text=self._not_found_html(path),
@@ -113,7 +175,7 @@ class PyUIDevServer:
                 status=404,
             )
 
-        # Rebuild IR to pick up any reactive-var changes
+        # Rebuild IR to pick up reactive-var changes
         self._ir_tree = build_ir_tree(self.app_class)
         self._generator = WebGenerator(self._ir_tree)
         self._route_map = {p.route: p for p in self._ir_tree.pages}
@@ -123,15 +185,9 @@ class PyUIDevServer:
         return web.Response(text=html, content_type="text/html")
 
     async def _handle_event(self, request: web.Request) -> web.Response:
-        """
-        POST /pyui-api/event/{handler_id}
-
-        Calls the registered Python handler, then returns:
-          {"state": {...current reactive state...}, "reload": false}
-        """
+        """POST /pyui-api/event/{handler_id} — invoke a Python event handler."""
         handler_id = request.match_info["handler_id"]
         if handler_id == "update_state":
-            # Direct state update from x-model
             try:
                 data = await request.json()
                 updates = data.get("data", {})
@@ -158,10 +214,8 @@ class PyUIDevServer:
                     text=json.dumps({"error": f"Unknown handler: {handler_id}"}),
                     content_type="application/json",
                 )
-
             with contextlib.suppress(Exception):
                 await request.json() if request.body_exists else {}
-
             try:
                 result = handler()
                 if asyncio.iscoroutine(result):
@@ -174,7 +228,6 @@ class PyUIDevServer:
                     content_type="application/json",
                 )
 
-        # Snapshot updated reactive state
         import inspect
 
         from pyui.state.reactive import ReactiveVar
@@ -184,11 +237,9 @@ class PyUIDevServer:
             if isinstance(value, ReactiveVar):
                 state[attr_name] = value.get()
 
-        # Phase 3: Re-evaluate IR tree to pick up reactive lambda changes
         self._ir_tree = build_ir_tree(self.app_class)
         self._generator = WebGenerator(self._ir_tree)
 
-        # Collect updated props for all reactive nodes
         node_updates: dict[str, dict[str, Any]] = {}
         for page in self._ir_tree.pages:
             self._collect_node_updates(page.children, node_updates)
@@ -199,7 +250,6 @@ class PyUIDevServer:
         )
 
     def _collect_node_updates(self, nodes: list[Any], updates: dict[str, dict[str, Any]]) -> None:
-        # Collect initial state for reactive nodes on this page
         def _collect(nodes: list[Any]) -> None:
             for n in nodes:
                 if n.reactive_props:
@@ -208,16 +258,6 @@ class PyUIDevServer:
                     _collect(n.children)
 
         _collect(nodes)
-
-    async def _handle_ws(self, request: web.Request) -> web.WebSocketResponse:
-        """WebSocket stub — sends a 'connected' message, then keeps alive."""
-        ws = web.WebSocketResponse()
-        await ws.prepare(request)
-        await ws.send_json({"type": "connected", "version": "0.1.0"})
-        log.debug("WebSocket client connected", remote=str(request.remote))
-        async for _msg in ws:
-            pass  # Hot-reload messages handled in Phase 6
-        return ws
 
     # ── Static helpers ────────────────────────────────────────────────────────
 
@@ -259,12 +299,20 @@ class PyUIDevServer:
         from rich.panel import Panel
 
         console = Console()
+
+        hot_reload_status = (
+            f"  Hot reload : [green]ON[/green] [dim](watching {Path(self.watch_file).name})[/dim]"
+            if self.watch_file
+            else "  Hot reload : [dim]OFF[/dim]"
+        )
+
         console.print(
             Panel.fit(
                 f"[bold cyan]PyUI Dev Server[/bold cyan]\n\n"
                 f"  URL     : [link={url}][cyan]{url}[/cyan][/link]\n"
                 f"  App     : [dim]{self.app_class.__name__}[/dim]\n"
-                f"  Pages   : [dim]{len(self._ir_tree.pages)} routes[/dim]\n\n"
+                f"  Pages   : [dim]{len(self._ir_tree.pages)} routes[/dim]\n"
+                f"{hot_reload_status}\n\n"
                 f"[dim]Press Ctrl+C to stop.[/dim]",
                 box=box.ASCII,
                 border_style="cyan",
@@ -272,7 +320,6 @@ class PyUIDevServer:
         )
 
         if self.open_browser:
-            import threading
 
             def _open() -> None:
                 import time
@@ -282,12 +329,35 @@ class PyUIDevServer:
 
             threading.Thread(target=_open, daemon=True).start()
 
-        web.run_app(
-            aio_app,
-            host=self.host,
-            port=self.port,
-            print=lambda *_: None,  # suppress aiohttp's own startup message
-        )
+        # Start file watcher if a watch path was provided
+        watcher = None
+        if self.watch_file:
+            from pyui.hotreload.watcher import FileWatcher
+
+            watch_dir = str(Path(self.watch_file).parent)
+            watcher = FileWatcher(watch_dir, on_change=self._on_file_change)
+            watcher.start()
+
+        try:
+            # Capture the event loop so the watcher thread can schedule coroutines
+            async def _run() -> None:
+                self._loop = asyncio.get_running_loop()
+                runner = web.AppRunner(aio_app)
+                await runner.setup()
+                site = web.TCPSite(runner, self.host, self.port)
+                await site.start()
+                # Run forever until cancelled
+                try:
+                    await asyncio.Event().wait()
+                finally:
+                    await runner.cleanup()
+
+            asyncio.run(_run())
+        except KeyboardInterrupt:
+            pass
+        finally:
+            if watcher:
+                watcher.stop()
 
 
 def run_dev_server(
@@ -295,6 +365,7 @@ def run_dev_server(
     host: str = "localhost",
     port: int = 8000,
     open_browser: bool = True,
+    watch_file: str | None = None,
 ) -> None:
     """
     Convenience function — create a :class:`PyUIDevServer` and start it.
@@ -305,6 +376,14 @@ def run_dev_server(
     host : str
     port : int
     open_browser : bool
+    watch_file : str | None
+        Path to the app file to watch for hot-reload.
     """
-    server = PyUIDevServer(app_class, host=host, port=port, open_browser=open_browser)
+    server = PyUIDevServer(
+        app_class,
+        host=host,
+        port=port,
+        open_browser=open_browser,
+        watch_file=watch_file,
+    )
     server.start()

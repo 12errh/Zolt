@@ -67,11 +67,18 @@ def main(ctx: click.Context, verbose: bool) -> None:
 )
 def cmd_new(name: str, template: str, target: str) -> None:
     """Scaffold a new PyUI project called NAME."""
-    console.print(
-        f"[yellow]![/yellow]  [bold]pyui new[/bold] is not yet implemented "
-        f"(Phase 0 stub). Project name: [cyan]{name}[/cyan], "
-        f"template: [cyan]{template}[/cyan], target: [cyan]{target}[/cyan]."
-    )
+    from pyui.scaffold import create_project
+
+    try:
+        project_path = create_project(name, template=template, target=target)
+        console.print(
+            f"[green]✓[/green] Created [cyan]{name}[/cyan] at [dim]{project_path}[/dim]\n\n"
+            f"  [dim]cd {name}[/dim]\n"
+            f"  [dim]pyui run[/dim]"
+        )
+    except Exception as exc:
+        console.print(f"[red]Error:[/red] {exc}")
+        raise SystemExit(1) from None
 
 
 # ── run ───────────────────────────────────────────────────────────────────────
@@ -108,7 +115,13 @@ def cmd_run(target: str, port: int, host: str, no_browser: bool, app_file: str) 
     if target == "web":
         from pyui.server.dev_server import run_dev_server
 
-        run_dev_server(AppClass, host=host, port=port, open_browser=not no_browser)
+        run_dev_server(
+            AppClass,
+            host=host,
+            port=port,
+            open_browser=not no_browser,
+            watch_file=app_file,
+        )
 
     elif target == "desktop":
         console.print(f"[bold cyan]Launching desktop window for[/bold cyan] [dim]{app_file}[/dim]")
@@ -206,18 +219,77 @@ def cmd_search(query: str) -> None:
 @main.command("doctor")
 def cmd_doctor() -> None:
     """Check environment health (Python version, dependencies, ports)."""
+    import importlib.metadata
     import platform
+    import socket
     import sys
 
-    console.print("[bold]PyUI Doctor[/bold]\n")
-    console.print(f"  Python   : [cyan]{sys.version.split()[0]}[/cyan]")
-    console.print(f"  Platform : [cyan]{platform.system()} {platform.release()}[/cyan]")
-    console.print(f"  PyUI     : [cyan]{pyui.__version__}[/cyan]")
+    from rich.table import Table
 
+    console.print("[bold]PyUI Doctor[/bold]\n")
+
+    results: list[tuple[str, str, str]] = []
+
+    # Python version
+    py_ver = sys.version.split()[0]
     py_ok = sys.version_info >= (3, 10)
-    status = "[green]OK[/green]" if py_ok else "[red]FAIL -- upgrade to Python 3.10+[/red]"
-    console.print(f"  Python >= 3.10 : {status}")
-    console.print("\n[dim]Full dependency checks will be added in Phase 6.[/dim]")
+    results.append(("Python >= 3.10", py_ver, "✓" if py_ok else "✗ upgrade required"))
+
+    # PyUI version + latest from PyPI
+    try:
+        import json as _json
+        import urllib.request
+
+        with urllib.request.urlopen(  # noqa: S310
+            "https://pypi.org/pypi/pyui-framework/json", timeout=3
+        ) as r:
+            latest = _json.loads(r.read())["info"]["version"]
+        up_to_date = latest == pyui.__version__
+        results.append(
+            (
+                "PyUI version",
+                f"{pyui.__version__} (latest: {latest})",
+                "✓" if up_to_date else f"↑ {latest} available",
+            )
+        )
+    except Exception:
+        results.append(("PyUI version", pyui.__version__, "✓ (PyPI check skipped)"))
+
+    # Required dependencies
+    required_deps = ["click", "jinja2", "aiohttp", "watchdog", "rich", "structlog"]
+    for dep in required_deps:
+        try:
+            ver = importlib.metadata.version(dep)
+            results.append((f"dep: {dep}", ver, "✓"))
+        except importlib.metadata.PackageNotFoundError:
+            results.append((f"dep: {dep}", "NOT FOUND", "✗ pip install pyui-framework"))
+
+    # Port availability
+    for port in [8000, 9000]:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(0.2)
+            in_use = s.connect_ex(("localhost", port)) == 0
+        results.append(
+            (
+                f"Port {port}",
+                "in use" if in_use else "available",
+                "⚠ choose another port" if in_use else "✓",
+            )
+        )
+
+    # Platform
+    results.append(("Platform", f"{platform.system()} {platform.release()}", "✓"))
+
+    table = Table(show_header=True, header_style="bold cyan", box=None, padding=(0, 2))
+    table.add_column("Check")
+    table.add_column("Value")
+    table.add_column("Status")
+
+    for check, value, status in results:
+        color = "green" if status.startswith("✓") else "red" if status.startswith("✗") else "yellow"
+        table.add_row(check, value, f"[{color}]{status}[/{color}]")
+
+    console.print(table)
 
 
 # ── lint ──────────────────────────────────────────────────────────────────────
@@ -227,10 +299,25 @@ def cmd_doctor() -> None:
 @click.argument("app_file", default="app.py", required=False)
 def cmd_lint(app_file: str) -> None:
     """Lint component definitions in APP_FILE."""
-    console.print(
-        f"[yellow]![/yellow]  [bold]pyui lint[/bold] is not yet implemented (Phase 6). "
-        f"Would lint [cyan]{app_file}[/cyan]."
-    )
+    from pyui.linter import lint_app
+
+    try:
+        from pyui.compiler.discovery import discover_app
+
+        AppClass = discover_app(app_file)
+    except Exception as exc:
+        console.print(f"[red]Error:[/red] {exc}")
+        raise SystemExit(1) from None
+
+    warnings = lint_app(AppClass)
+    if not warnings:
+        console.print(f"[green]✓[/green] No issues found in [cyan]{app_file}[/cyan]")
+    else:
+        for w in warnings:
+            icon = "[red]✗[/red]" if w["level"] == "error" else "[yellow]⚠[/yellow]"
+            console.print(f"  {icon}  {w['message']}")
+        console.print(f"\n[dim]{len(warnings)} issue(s) found.[/dim]")
+        raise SystemExit(1) from None
 
 
 # ── storybook ───────────────────────────────────────────────────────────────

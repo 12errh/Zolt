@@ -397,6 +397,53 @@ _PAGE_TEMPLATE = """\
       }}
     }});
   </script>
+
+  <!-- PyUI Hot Reload -->
+  <script>
+    (function() {{
+      var ws = new WebSocket('ws://' + location.host + '/pyui-api/ws');
+      var overlay = null;
+
+      function removeOverlay() {{
+        if (overlay) {{ overlay.remove(); overlay = null; }}
+      }}
+
+      ws.onmessage = function(e) {{
+        var msg = JSON.parse(e.data);
+        if (msg.type === 'reload') {{
+          removeOverlay();
+          window.location.reload();
+        }} else if (msg.type === 'error') {{
+          removeOverlay();
+          overlay = document.createElement('div');
+          overlay.id = '__pyui_error_overlay';
+          overlay.style.cssText = [
+            'position:fixed','top:0','left:0','right:0','bottom:0',
+            'background:rgba(15,23,42,0.95)','z-index:99999',
+            'display:flex','align-items:center','justify-content:center',
+            'font-family:monospace','padding:2rem'
+          ].join(';');
+          overlay.innerHTML = '<div style="max-width:720px;width:100%">'
+            + '<div style="color:#f87171;font-size:1.1rem;font-weight:700;margin-bottom:1rem">'
+            + '⚠ PyUI Compiler Error</div>'
+            + '<pre style="color:#fca5a5;background:#1e293b;padding:1.5rem;border-radius:8px;'
+            + 'overflow:auto;font-size:0.85rem;line-height:1.6;white-space:pre-wrap">'
+            + msg.message.replace(/</g,'&lt;').replace(/>/g,'&gt;')
+            + '</pre>'
+            + '<button onclick="this.parentElement.parentElement.remove()" '
+            + 'style="margin-top:1rem;padding:0.5rem 1rem;background:#334155;color:#e2e8f0;'
+            + 'border:none;border-radius:6px;cursor:pointer;font-size:0.85rem">Dismiss</button>'
+            + '</div>';
+          document.body.appendChild(overlay);
+        }}
+      }};
+
+      ws.onclose = function() {{
+        // Reconnect after 1s if server restarts
+        setTimeout(function() {{ location.reload(); }}, 1000);
+      }};
+    }})();
+  </script>
 </body>
 </html>
 """
