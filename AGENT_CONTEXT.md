@@ -1,89 +1,113 @@
-# PyUI — Complete Agent Context
+# Zolt — Complete Agent Context
 
-> This file is the single source of truth for any AI agent working on this codebase.
-> Read this before touching anything. It covers architecture, conventions, current state, and what comes next.
+> Single source of truth for any AI agent working on this codebase.
+> Read this before touching anything.
 
 ---
 
-## What Is PyUI
+## What Is Zolt
 
-PyUI is an open-source Python UI framework. The core idea: write your entire UI in pure Python, and the framework compiles it to whatever target you need — currently web (HTML + Tailwind CSS + Alpine.js), with desktop (Qt/tkinter) and terminal (Rich TUI) planned.
+Zolt is an open-source Python UI framework. Write your entire UI in pure Python — no HTML, no CSS, no JavaScript. One codebase compiles to web (HTML + Tailwind CSS + Alpine.js), desktop (tkinter), and terminal (Rich TUI).
 
-- **Version:** 1.1.0
+- **Version:** 1.2.1
 - **Python:** 3.10+
 - **License:** MIT
-- **Repo:** https://github.com/12errh/zolt
-- **Status:** v1.1.0 — Live on PyPI as `zolt`
+- **Repo:** https://github.com/12errh/Zolt
+- **PyPI:** `pip install zolt`
+- **Import name:** `from pyui import App` (package is `zolt`, import is `pyui`)
+- **Status:** v1.2.1 live on PyPI
 
 ---
 
 ## Project Structure
 
 ```
-pyui/
-├── src/pyui/                    # Main package (installed as pyui-framework)
-│   ├── __init__.py              # Public API — all user-facing exports live here
-│   ├── app.py                   # App base class + AppMeta metaclass
-│   ├── page.py                  # Page class (routable screen)
-│   ├── exceptions.py            # PyUIError, CompilerError, ComponentError, ThemeError, PluginError
-│   │
-│   ├── components/              # All 42+ UI components
-│   │   ├── base.py              # BaseComponent — root of all components
-│   │   ├── layout/              # Flex, Grid, Stack, Container, Divider, Spacer, Sidebar, Split, List
-│   │   ├── display/             # Text, Heading, Badge, Tag, Avatar, Icon, Image, Markdown, RawHTML
-│   │   ├── input/               # Button, Input, Textarea, Select, Checkbox, Radio, Toggle, Slider, DatePicker, FilePicker, Form
-│   │   ├── feedback/            # Alert, Toast, Modal, Drawer, Tooltip, Progress, Spinner, Skeleton
-│   │   ├── navigation/          # Nav, Tabs, Breadcrumb, Pagination, Menu
-│   │   ├── data/                # Table, Stat, Chart
-│   │   └── media/               # Video
-│   │
-│   ├── compiler/
-│   │   ├── ir.py                # IR builder — converts component tree → IRTree
-│   │   └── discovery.py         # discover_app() — imports user .py file, finds App subclass
-│   │
-│   ├── renderers/
-│   │   └── web/
-│   │       ├── generator.py     # WebGenerator — IRTree → full HTML pages
-│   │       └── tailwind.py      # Tailwind CSS class mappings for every component
-│   │
-│   ├── server/
-│   │   └── dev_server.py        # aiohttp dev server, event POST handler, WebSocket stub
-│   │
-│   ├── state/
-│   │   ├── reactive.py          # ReactiveVar + reactive() factory
-│   │   ├── computed.py          # ComputedVar + computed() factory
-│   │   └── store.py             # Global Store singleton
-│   │
-│   ├── theme/
-│   │   └── tokens.py            # DEFAULT_TOKENS + 6 built-in themes (light, dark, ocean, sunset, forest, rose)
-│   │
-│   ├── cli/
-│   │   ├── main.py              # Click CLI entry point (pyui command)
-│   │   ├── storybook.py         # pyui storybook — component gallery server
-│   │   └── commands/            # Placeholder for future subcommand modules
-│   │
-│   └── utils/
-│       └── logging.py           # structlog-based logging setup
+src/pyui/                        ← import name is pyui
+├── __init__.py                  ← Public API — all user-facing exports
+├── app.py                       ← App base class + AppMeta metaclass
+│                                   App.extra_css, App.head_scripts added in v1.2
+├── page.py                      ← Page class (routable screen)
+├── exceptions.py                ← PyUIError hierarchy, PYUI-NNN error codes
+├── linter.py                    ← lint_app()
+├── scaffold.py                  ← create_project() — zolt new + zolt templates
+│                                   agency template copies examples/agency/ directly
 │
-├── tests/
-│   ├── conftest.py              # autouse fixture: resets global store between tests
-│   ├── counter_reactive.py      # Minimal reactive counter demo
-│   ├── portfolio.py             # Full cinematic portfolio demo (run with: python tests/portfolio.py)
-│   ├── assets/                  # Images used by portfolio demo
-│   ├── test_compiler/           # Unit tests for IR builder and discovery
-│   └── test_renderers/          # Unit tests for web generator
+├── components/
+│   ├── base.py                  ← BaseComponent — inlineStyle() added in v1.2
+│   ├── layout/
+│   │   ├── flex.py, grid.py, stack.py, container.py
+│   │   ├── section.py           ← NEW v1.2: <section> with position:relative
+│   │   ├── sidebar.py, split.py, divider.py, spacer.py, list.py
+│   ├── display/
+│   │   ├── text.py, heading.py, badge.py, tag.py, avatar.py
+│   │   ├── blur_heading.py      ← NEW v1.2: word-by-word blur-reveal heading
+│   │   ├── link.py              ← NEW v1.2: semantic <a> component
+│   │   ├── icon.py, image.py, markdown.py, rawhtml.py
+│   ├── input/
+│   │   ├── button.py, input.py, textarea.py, select.py
+│   │   ├── checkbox.py, radio.py, toggle.py, slider.py
+│   │   ├── datepicker.py, filepicker.py, form.py
+│   ├── feedback/
+│   │   ├── alert.py, toast.py, modal.py, drawer.py
+│   │   ├── tooltip.py, progress.py, spinner.py, skeleton.py
+│   ├── navigation/
+│   │   ├── nav.py, tabs.py, breadcrumb.py, pagination.py, menu.py
+│   │   ├── floating_nav.py      ← NEW v1.2: fixed glassmorphism pill nav
+│   ├── data/
+│   │   ├── table.py, stat.py, chart.py
+│   └── media/
+│       ├── video.py
+│       └── video_bg.py          ← NEW v1.2: absolutely-positioned bg video + HLS
 │
-├── app.py                       # Root demo app (pyui run app.py)
-├── pyproject.toml               # Build config, deps, tool settings
-├── CHANGELOG.md                 # Version history
-└── CONTRIBUTING.md              # Contribution guide
+├── compiler/
+│   ├── ir.py                    ← build_ir_node/page/tree → IRTree
+│   │                               stores inline_style, head_scripts in props/app_meta
+│   └── discovery.py             ← discover_app() — imports user .py, finds App subclass
+│
+├── renderers/
+│   ├── web/
+│   │   ├── generator.py         ← WebGenerator — IRTree → full HTML
+│   │   │   Dispatches: link, section, video_bg, blur_heading, floating_nav (v1.2)
+│   │   │   _render_flex: supports inline_style prop
+│   │   │   _render_text: supports inline_style prop
+│   │   │   class_name post-processor: injects .className() into first class=""
+│   │   └── tailwind.py          ← Tailwind CSS class mappings
+│   ├── desktop/
+│   │   └── tkinter_renderer.py  ← tkinter widget tree
+│   └── cli/
+│       └── generator.py         ← Rich TUI renderer
+│
+├── server/
+│   └── dev_server.py            ← aiohttp dev server
+│   CSP allows: media-src https:, connect-src https: (for HLS/video)
+│
+├── state/
+│   ├── reactive.py              ← ReactiveVar + reactive()
+│   ├── computed.py              ← ComputedVar + computed()
+│   └── store.py                 ← Global Store singleton
+│
+├── theme/
+│   ├── engine.py                ← build_theme, tokens_to_css_vars, tokens_to_figma
+│   │   theme_swap_script(): pyuiSetTheme() — calls API then reloads page
+│   │   dark_mode_script(): loads stored theme from localStorage on page load
+│   └── tokens.py                ← DEFAULT_TOKENS + 6 built-in themes
+│
+├── plugins/
+│   ├── base.py, registry.py, loader.py
+│
+├── hotreload/
+│   ├── watcher.py               ← FileWatcher (watchdog-based)
+│   └── diff.py                  ← diff_ir() — minimal IR patch generation
+│
+└── cli/
+    ├── main.py                  ← Click CLI: new, run, build, storybook,
+    │                               doctor, lint, search, publish, info, templates
+    └── storybook.py             ← Component gallery (port 9000, hot reload enabled)
 ```
 
 ---
 
 ## Compilation Pipeline
-
-This is the most important thing to understand. Everything flows through this pipeline:
 
 ```
 User Python file
@@ -91,70 +115,62 @@ User Python file
       ▼
 compiler/discovery.py
   discover_app("app.py")
-  → imports the module, finds the App subclass
+  → adds file's parent dir to sys.path
+  → imports module, finds App subclass
       │
       ▼
 compiler/ir.py
   build_ir_tree(AppClass)
-  → walks App._pages, calls build_ir_page() for each Page
-  → build_ir_page() calls page.compose() if it exists, then build_ir_node() for each child
-  → build_ir_node() resolves props, detects ReactiveVars/lambdas, registers event handlers
-  → returns IRTree (target-agnostic)
+  → collects ReactiveVars, head_scripts, extra_css from App
+  → calls build_ir_page() for each Page
+  → build_ir_page() calls page.compose(), then build_ir_node() per child
+  → build_ir_node() resolves props, stores class_name + inline_style,
+    detects ReactiveVars/lambdas, registers event handlers
+  → returns IRTree
       │
       ▼
 renderers/web/generator.py
   WebGenerator(ir_tree).render_ir_page(ir_page)
-  → dispatches each IRNode to a _render_* function
-  → _render_* functions call tailwind.py for CSS classes
+  → dispatches each IRNode to _render_* function
+  → post-processor injects class_name into first class="" attribute
+  → scripts injected via sentinels (__PYUI_DARK_SCRIPT__, __PYUI_ALPINE_DATA__)
+    to avoid .format() brace conflicts with JS code
   → returns complete HTML string
-      │
-      ▼
-server/dev_server.py
-  serves HTML over aiohttp
-  handles POST /pyui-api/event/{handler_id} for button clicks etc.
-  handles WebSocket /pyui-api/ws (hot-reload stub, Phase 6)
 ```
 
 ---
 
 ## Core Data Structures
 
-### IRNode (compiler/ir.py)
+### IRNode
 ```python
 @dataclass
 class IRNode:
-    type: str                          # "button", "flex", "text", etc.
-    props: dict[str, Any]              # resolved, serialisable props
+    type: str                          # "button", "flex", "section", "video_bg", etc.
+    props: dict[str, Any]              # resolved props + class_name + inline_style
     children: list[IRNode]
     events: dict[str, str]             # event_name → handler_id
-    reactive_bindings: list[str]       # names of reactive vars this node depends on
-    reactive_props: dict[str, list[str]]  # prop_name → [dep_var_names]
-    style_variant: str | None          # "primary", "ghost", etc.
-    theme_tokens: dict[str, str]
-    node_id: str                       # unique DOM id (pyui-{uuid})
+    reactive_bindings: list[str]
+    reactive_props: dict[str, list[str]]
+    style_variant: str | None
+    node_id: str
 ```
 
-### IRPage
-```python
-@dataclass
-class IRPage:
-    route: str
-    title: str
-    layout: str          # "default" | "full-width" | "sidebar" | "auth"
-    children: list[IRNode]
-    meta: dict[str, str]
-```
+Key props stored by `build_ir_node`:
+- `props["class_name"]` — space-joined string from `component._classes` (`.className()`)
+- `props["inline_style"]` — raw CSS string from `component._inline_style` (`.inlineStyle()`)
 
 ### IRTree
 ```python
 @dataclass
 class IRTree:
-    app_meta: dict[str, Any]           # name, version, description, favicon
+    app_meta: dict[str, Any]   # name, version, description, favicon,
+                               # extra_css, head_scripts
     pages: list[IRPage]
     theme: str | dict[str, str]
-    reactive_vars: dict[str, Any]      # key → current value snapshot
+    reactive_vars: dict[str, Any]
     event_handlers: dict[str, Callable]
-    persistent_vars: list[str]         # vars with persist=True → localStorage
+    persistent_vars: list[str]
 ```
 
 ---
@@ -163,373 +179,270 @@ class IRTree:
 
 ### BaseComponent (components/base.py)
 
-Every component inherits from `BaseComponent`. Key internals:
+Key internals:
+- `_CONTEXT_STACK` — global stack. `with Flex():` pushes Flex; children auto-register.
+- `component_type: str` — must be set on every subclass. Used by IR dispatcher.
+- `props: dict` — all component-specific data.
+- `_classes: list[str]` — from `.className()`, stored as `props["class_name"]`
+- `_inline_style: str` — from `.inlineStyle()`, stored as `props["inline_style"]`
 
-- `_CONTEXT_STACK: list[Any]` — global stack. When you do `with Flex():`, the Flex is pushed onto this stack. Any component instantiated inside the `with` block auto-registers itself as a child via `parent.add(self)` in `__init__`.
-- `component_type: str` — must be set on every subclass (e.g. `"button"`, `"flex"`). This is what the IR dispatcher uses.
-- `props: dict[str, Any]` — all component-specific data lives here.
-- `_style_variant`, `_size`, `_classes`, `_hidden`, `_disabled` — standard style state.
-- Event handlers: `_on_click`, `_on_change`, `_on_hover`, `_on_mount`, `_on_unmount`.
-
-### Chainable API (all methods return `self`)
+### Chainable API
 ```python
 Button("Save")
-    .style("primary")       # sets _style_variant
-    .size("lg")             # sets _size
-    .padding(4)             # sets _padding
-    .className("my-class")  # appends to _classes
-    .disabled(False)        # sets _disabled
-    .onClick(handler)       # sets _on_click
-```
-
-### Declarative Composition (context manager pattern)
-```python
-class MyPage(Page):
-    def compose(self):
-        with Flex(direction="col", gap=6):
-            Heading("Title")           # auto-added to Flex
-            with Grid(cols=2):
-                Text("A")              # auto-added to Grid
-                Text("B")
+    .style("primary")           # sets _style_variant
+    .size("lg")                 # sets _size
+    .className("my-class")      # appends to _classes
+    .inlineStyle("z-index:10;") # sets _inline_style (v1.2)
+    .disabled(False)
+    .onClick(handler)
 ```
 
 ### Adding a New Component — Checklist
-1. Create file in the right `components/` subdirectory
-2. Inherit from `BaseComponent`
-3. Set `component_type = "your_type"` (snake_case)
-4. Set `self.props` in `__init__`
-5. Export from the subdirectory's `__init__.py`
-6. Export from `src/pyui/__init__.py` (both import and `__all__`)
-7. Add `"your_type": _render_your_type` to the dispatch dict in `renderers/web/generator.py`
-8. Add `_render_your_type(node: IRNode) -> str` function in `generator.py`
-9. Add Tailwind class helper in `renderers/web/tailwind.py` if needed
+1. Create file in `src/pyui/components/<category>/`
+2. Inherit from `BaseComponent`, set `component_type = "my_type"`
+3. Export from category `__init__.py`
+4. Export from `src/pyui/__init__.py` (import + `__all__`)
+5. Add `"my_type": _render_my_type` to dispatch dict in `generator.py`
+6. Add `_render_my_type(node: IRNode) -> str` in `generator.py`
+   - Do NOT manually read `class_name` — the post-processor injects it automatically
+   - Do NOT manually read `inline_style` unless you need to merge it into a style attr
+7. Add widget builder in `renderers/desktop/tkinter_renderer.py`
+8. Add renderer in `renderers/cli/generator.py`
+
+### class_name Post-Processor (IMPORTANT)
+After every `_render_*` function returns HTML, `_render_node` runs:
+```python
+custom_class = node.props.get("class_name", "").strip()
+if custom_class and ' class="' in html:
+    html = html.replace(' class="', f' class="{custom_class} ', 1)
+```
+This means: **never manually include `class_name` in your renderer output** — it will be doubled.
+
+---
+
+## New Components (v1.2)
+
+### BlurHeading
+```python
+BlurHeading("The Website Your Brand Deserves", level=1, delay_ms=100)
+    .className("text-white max-w-3xl mx-auto")
+```
+- Splits text into words, wraps each in `<span style="animation-delay:Nms">`
+- Always applies `word-reveal font-heading` classes (Instrument Serif italic)
+- Fluid font-size via `clamp()` per heading level (h1=clamp(3rem,8vw,6rem), etc.)
+- `class_name` injected by post-processor — do not include manually
+
+### Link
+```python
+Link("Get Started", href="#").style("glass").icon("arrow-up-right")
+Link("Privacy", href="/privacy").style("footer")
+```
+Style variants: `glass`, `primary`, `ghost`, `nav`, `footer`
+
+### Section
+```python
+with Section(min_height=560, bg="#000").className("h-screen"):
+    VideoBg(src="...", hls=True)
+    Flex(...).inlineStyle("position:absolute;inset:0;z-index:10;")
+```
+Renders as `<section style="position:relative;overflow:hidden;...">`.
+
+### VideoBg
+```python
+VideoBg(src=MUX_URL, hls=True, desaturate=True, fade_height=160)
+```
+- `hls=True` → injects hls.js init script inline
+- `desaturate=True` → `filter:saturate(0)`
+- `fade_height` → top+bottom gradient fades in px (0 to disable)
+- Requires hls.js loaded — add to `App.head_scripts`
+
+### FloatingNav
+```python
+FloatingNav(
+    logo_src="/images/logo.png",
+    logo_alt="Studio",
+    links=["Home", "Services", "Work"],  # or [("Home", "/"), ...]
+    cta_text="Get Started",
+    cta_href="#",
+)
+```
+Renders as `position:fixed` nav with liquid-glass pill.
+
+---
+
+## App Class — Full Attributes
+
+```python
+class MyApp(App):
+    name: str = "PyUI App"
+    version: str = "1.0.0"
+    description: str = ""
+    icon: str | None = None
+    favicon: str | None = None
+    theme: str | dict[str, str] = "light"   # or ReactiveVar
+    fonts: list[str] = ["Inter"]
+    extra_css: str = ""                      # injected into <style> block
+    head_scripts: list[str] = []             # CDN <script> tags in <head>
+    meta: dict[str, str] = {}
+    plugins: list[Any] = []
+    # Pages declared as class attributes — AppMeta discovers them
+    home = HomePage()
+```
 
 ---
 
 ## State & Reactivity
 
-### ReactiveVar (state/reactive.py)
 ```python
 count = reactive(0)           # ReactiveVar[int]
 name  = reactive("", persist=True)  # syncs to localStorage
 
-count.get()                   # read value (also tracks dependency if inside computed)
-count.set(5)                  # write value, notifies subscribers
+count.get()                   # read
+count.set(5)                  # write + notify subscribers
 count.subscribe(fn)           # returns unsubscribe callable
 ```
 
-`persist=True` → the var name is added to `IRTree.persistent_vars` → the web renderer emits JS that saves/loads from `localStorage` under key `pyui_state_{name}`.
-
-### ComputedVar (state/computed.py)
+Reactive Text:
 ```python
-doubled = computed(lambda: count.get() * 2)
-doubled.get()   # auto-updates when count changes
-doubled.set(x)  # raises AttributeError — read-only
+Text(lambda: f"Count: {count.get()}")  # re-renders on count change
 ```
 
-Dependency tracking uses `_REACTIVE_CONTEXT` (a thread-local stack of sets). When `computed()` runs its fn, any `ReactiveVar.get()` call pushes itself into the current set. The ComputedVar subscribes to all of them.
-
-### Store (state/store.py)
+Reactive theme (for theme switching):
 ```python
-from pyui import store
-
-username = store.define("username", "Guest")   # creates ReactiveVar, raises if key exists
-store.get("username").set("Alice")
-store.snapshot()   # → {"username": "Alice"}
-store.reset()      # clears all — used in tests
-```
-
-### How Reactivity Works in the Browser
-1. `build_ir_tree()` snapshots all `ReactiveVar` values → `IRTree.reactive_vars`
-2. `WebGenerator` serialises this as `window.__pyuiState = {...}` in the page HTML
-3. Alpine.js store: `Alpine.store('pyui', { state: __pyuiState, nodes: __pyuiNodes })`
-4. Reactive `Text` nodes use `x-text="$store.pyui.nodes['{node_id}']?.content"`
-5. Input components with reactive `value` get `x-model="$store.pyui.state.{var_name}"`
-6. On any event (button click, input change), browser POSTs to `/pyui-api/event/{handler_id}`
-7. Dev server calls the Python handler, re-runs `build_ir_tree()`, collects updated node props
-8. Returns `{"state": {...}, "nodes": {...}, "reload": false}` as JSON
-9. Browser updates `Alpine.store('pyui')` → Alpine reactivity propagates to DOM
-
-### REACTIVE_VAR_REGISTRY
-`register_reactive_name(var, name)` is called during `build_ir_tree()` for every `ReactiveVar` found on the App class. This lets `build_ir_node()` look up the string name of a var (needed to generate correct Alpine `x-text`/`x-model` bindings).
-
----
-
-## App & Page Classes
-
-### App (app.py)
-```python
+_theme = reactive("light")
 class MyApp(App):
-    name = "My App"
-    theme = "dark"           # or a dict of token overrides
-    fonts = ["Inter"]
-    count = reactive(0)      # ReactiveVars on App are global state
-
-    home = HomePage()        # Page instances auto-discovered by AppMeta
+    theme = _theme
+    current_theme = _theme
 ```
-
-`AppMeta` metaclass scans class attributes for `Page` instances and populates `cls._pages`. Every Page must have a `route`.
-
-### Page (page.py)
-```python
-class HomePage(Page):
-    title = "Home"
-    route = "/"
-    layout = "default"       # "default" | "full-width" | "sidebar" | "auth"
-
-    def compose(self):       # declarative style — preferred
-        with Flex(direction="col"):
-            Heading("Hello")
-```
-
-Or imperative style:
-```python
-home = Page(title="Home", route="/")
-home.add(Heading("Hello"), Button("Click"))
-```
-
-`Page.layout` maps to `PAGE_LAYOUT_CLASSES` in `tailwind.py`:
-- `"default"` → `container mx-auto px-4 py-8 max-w-7xl`
-- `"full-width"` → `w-full` (no padding — use for full-bleed designs)
-- `"sidebar"` → `flex gap-6 px-4 py-8 max-w-7xl mx-auto`
-- `"auth"` → `min-h-screen flex items-center justify-center bg-gray-50 px-4`
-
----
-
-## Web Renderer Details
-
-### generator.py
-- `_PAGE_TEMPLATE` — the full HTML shell. Includes: Tailwind CDN + custom config (animations, keyframes, brand color), tailwindcss-animate plugin, Alpine.js, Inter font (weights 300–900), Lucide icons, Marked.js, Chart.js.
-- `_render_node(node)` — main dispatch function. After calling the specific renderer, it also:
-  - Injects `x-model` + `@input` for reactive input components
-  - Injects `x-show` / `x-bind:disabled` for reactive `hidden`/`disabled` props
-  - Appends custom `className()` classes
-- `render_component(component)` — public helper, builds IR node and renders to HTML fragment
-- `render_page(page, theme)` — public helper, builds IR page and renders to full HTML
-- `WebGenerator(ir_tree).write_to_disk(output_dir)` — for `pyui build`
-
-### tailwind.py
-Pure functions mapping component props → Tailwind class strings. No side effects. Pattern:
-```python
-def button_classes(variant, size, disabled) -> str: ...
-def flex_classes(direction, align, justify, gap, wrap) -> str: ...
-```
-
-### Custom CSS in the Page Template
-The template includes these utility classes (added in Phase 3 / portfolio work):
-- `.animate-on-scroll` + `.is-visible` — IntersectionObserver-driven scroll animations
-- `.stagger-1` through `.stagger-6` — transition-delay utilities
-- `.tilt-card` — 3D hover tilt effect
-- `.gradient-text` — animated gradient text
-- `.marquee-container` / `.marquee-content` — infinite scroll marquee
-- `.magnetic-btn` — smooth transform transition for magnetic button effect
-- `.theme-transition` — smooth color transitions on theme change
-
-### RawHTML Component
-`RawHTML(html_string)` — escape hatch for injecting arbitrary HTML/CSS/JS. Also available as `Text("").inject_html(html_string)`. The renderer outputs the string unescaped. **XSS risk — only use with trusted content.**
-
----
-
-## CLI
-
-Entry point: `pyui` → `src/pyui/cli/main.py:main` (Click group)
-
-| Command | Status | Notes |
-|---|---|---|
-| `pyui new <name>` | ✅ Working | Scaffold with blank/dashboard/landing/admin/auth templates |
-| `pyui run [app.py]` | ✅ Working | web (dev server + hot reload), desktop (tkinter), cli (Rich) |
-| `pyui build [app.py]` | ✅ Working | web → HTML/CSS/JS; desktop/cli → run.py launcher |
-| `pyui storybook` | ✅ Working | Component gallery on port 9000 |
-| `pyui doctor` | ✅ Working | Python, deps, ports, PyPI version check |
-| `pyui lint [app.py]` | ✅ Working | Missing alt, empty pages, duplicate routes, bad variants |
-| `pyui search <query>` | ✅ Working | Searches PyPI for pyui-* packages |
-| `pyui publish` | 🚧 Stub | Phase 5 — not yet implemented |
-| `pyui info` | ✅ Working | Version info panel |
-
-`pyui run` options: `--port`, `--host`, `--no-browser`, `--target` (web/desktop/cli)
 
 ---
 
 ## Theme System
 
-Themes are flat token dicts. `DEFAULT_TOKENS` defines the base. Built-in themes override specific keys:
+6 built-in themes: `light`, `dark`, `ocean`, `sunset`, `forest`, `rose`
 
-```python
-BUILT_IN_THEMES = {
-    "light": {},           # uses DEFAULT_TOKENS as-is
-    "dark": DARK_OVERRIDES,
-    "ocean": OCEAN_OVERRIDES,
-    "sunset": SUNSET_OVERRIDES,
-    "forest": FOREST_OVERRIDES,
-    "rose": ROSE_OVERRIDES,
-}
-```
+Theme switching flow:
+1. User calls `pyuiSetTheme('dark')` (JS function in every page)
+2. Browser POSTs to `/pyui-api/theme/dark`
+3. Server calls `app_class.theme.set('dark')` on the ReactiveVar
+4. Server returns new CSS vars
+5. Browser reloads → `build_ir_tree` reads new theme → page renders with dark tokens
 
-`_build_tokens(theme)` in `generator.py` merges DEFAULT_TOKENS + overrides → `_tokens_to_css_vars()` renders them as CSS `--pyui-*` variables in `:root`.
-
-Custom theme: `App.theme = {"color.primary": "#FF0000", ...}` — any key from DEFAULT_TOKENS can be overridden.
+`tokens_to_css_vars()` generates both CSS variables AND `!important` overrides for Tailwind classes (bg-white, text-gray-900, etc.) so theme colors actually apply visually.
 
 ---
 
-## Dev Server Internals
+## Web Renderer — Key Details
 
-- **Routes:** `POST /pyui-api/event/{handler_id}`, `GET /pyui-api/ws`, `GET /{path:.*}`
-- **Event flow:** browser click → POST → `get_handler(id)` → call Python fn → re-run `build_ir_tree()` → collect node updates → return JSON
-- **Special handler `update_state`:** used by `x-model` inputs to directly set ReactiveVar values without a Python handler
-- **Hot reload:** WebSocket endpoint exists but only sends `{"type": "connected"}`. Full hot-reload is Phase 6.
-- **SPA fallback:** any unmatched route falls back to `/`
+### Template Sentinels
+The page template uses sentinels instead of `.format()` placeholders for content that contains `{`/`}`:
+- `__PYUI_DARK_SCRIPT__` → replaced with `dark_mode_script() + theme_swap_script()`
+- `"__PYUI_ALPINE_DATA__"` → replaced with actual JSON (single-quoted)
+
+This avoids Python's `.format()` interpreting JS object literals as format placeholders.
+
+### CSP Headers
+```
+media-src 'self' blob: https:    ← allows CloudFront MP4, Mux HLS blobs
+connect-src 'self' ws: wss: https:  ← allows Mux HLS stream requests
+img-src 'self' data: blob: https:   ← allows external images
+```
+
+### head_scripts
+`App.head_scripts = ["https://cdn.jsdelivr.net/npm/hls.js@1.6.15/dist/hls.min.js"]`
+→ injected as `<script src="..."></script>` tags in `<head>` before closing `</head>`.
+
+---
+
+## CLI Commands
+
+| Command | Status | Notes |
+|---|---|---|
+| `zolt new <name>` | ✅ | `--template blank\|dashboard\|landing\|admin\|auth\|agency` |
+| `zolt templates` | ✅ | Interactive table + prompt, scaffolds chosen template |
+| `zolt run [app.py]` | ✅ | `--target web\|desktop\|cli`, `--port`, `--host`, `--no-browser` |
+| `zolt build [app.py]` | ✅ | `--target web\|desktop\|cli\|all`, `--out` |
+| `zolt storybook` | ✅ | Port 9000, hot reload enabled |
+| `zolt doctor` | ✅ | Python, deps, ports, PyPI version |
+| `zolt lint [app.py]` | ✅ | Missing alt, empty pages, duplicate routes |
+| `zolt search <query>` | ✅ | Searches PyPI for zolt-* packages |
+| `zolt publish` | ✅ | Validates pyui.json, runs build + twine upload |
+| `zolt info` | ✅ | Version info panel |
+
+---
+
+## Agency Template — Scaffold Behaviour
+
+`create_project(name, template="agency")`:
+1. If `examples/agency/` exists (dev/editable install) → copies files directly, updates `name` in `app.py`
+2. If not (installed package) → writes inline file constants from `_SECTION_*` strings in `scaffold.py`
+
+Output structure:
+```
+<name>/
+├── app.py, styles.py, requirements.txt, README.md
+└── sections/
+    ├── __init__.py, navbar.py, hero.py, start.py
+    ├── features_chess.py, features_grid.py
+    ├── stats.py, testimonials.py, cta_footer.py
+```
 
 ---
 
 ## Testing
 
 ```bash
-pytest                          # all tests
-pytest tests/test_compiler/     # compiler unit tests
-pytest tests/test_renderers/    # renderer unit tests
-pytest -k "not e2e"             # skip playwright tests
-pytest --cov=pyui               # with coverage
+pytest                          # all 243 tests
+pytest tests/test_compiler/
+pytest tests/test_renderers/
+pytest tests/test_theme/
+pytest tests/integration/
 ```
 
-- `conftest.py` has an `autouse` fixture that resets the global `store` between every test
-- E2E tests require Playwright and are marked `@pytest.mark.e2e`
-- `asyncio_mode = "auto"` in pyproject.toml — async tests work without decorators
+- `conftest.py` resets global store between every test
+- `asyncio_mode = "auto"` — async tests work without decorators
+- E2E tests require Playwright, marked `@pytest.mark.e2e`
 
 ---
 
-## Code Style & Tooling
+## Code Style
 
 ```bash
-ruff check src/ tests/          # lint
-ruff format src/ tests/         # format
-mypy src/                       # type check (strict mode)
-pre-commit run --all-files      # run all hooks
+ruff check src/ tests/ examples/agency/   # lint
+ruff format src/ tests/ examples/agency/  # format
+mypy src/pyui/ --ignore-missing-imports   # type check
 ```
 
 - Line length: 100
-- Target: Python 3.10
 - Ruff rules: E, F, I, UP, B, SIM (E501 ignored)
+- Per-file ignores: SIM117 for `storybook.py` and `tests/landing.py`
+  (nested `with` blocks are intentional PyUI composition pattern)
 - MyPy: strict, ignore_missing_imports = true
-- Pre-commit: ruff, mypy, trailing whitespace, end-of-file fixer
 
 ---
 
-## Running the Demos
+## Known Constraints
 
-```bash
-# Basic demo app
-python app.py
-# or
-pyui run app.py
-# → http://localhost:8000
-
-# Cinematic portfolio demo (full-bleed, dark, animations)
-python tests/portfolio.py
-# → http://localhost:9010
-
-# Reactive counter
-python tests/counter_reactive.py
-
-# Component gallery
-pyui storybook
-# → http://localhost:9000
-```
+- Import name is `pyui` (not `zolt`) — `from pyui import App` — intentional
+- `AppMeta` runs at class definition time — pages must be in the class body
+- `REACTIVE_VAR_REGISTRY` is module-level — not thread-safe for multi-user servers
+- Hot reload re-imports the module on every file change
+- `RawHTML` / `Text.inject_html()` bypass XSS protection — only use with trusted content
+- Tailwind loaded from CDN — not suitable for production without `zolt build`
+- `zolt build` produces static HTML — no server required for deployed apps
 
 ---
 
-## Phase Roadmap
+## v1.5 Roadmap
 
-| Phase | Name | Status |
-|---|---|---|
-| 0 | Project setup & foundations | ✅ Complete |
-| 1 | Core compiler (web target) | ✅ Complete |
-| 2 | Full component library (42+ components) + storybook | ✅ Complete |
-| 3 | State & reactivity (ReactiveVar, computed, store, persistence, x-model) | ✅ Complete |
-| 4 | Desktop (tkinter) & CLI (Rich) renderers | ✅ Complete |
-| 5 | Theme engine & plugin system | ✅ Complete |
-| 6 | Hot reload, linter, scaffold, doctor, dev tools panel | ✅ Complete |
-| 7 | Production hardening, error codes, security, example apps | ✅ Complete |
-| 8 | Public launch — v1.0.0 | ✅ Complete |
+See `docs/Zolt_v1_5_PRD_TRD_Final.md` for the full plan.
 
----
-
-## Phase 4 — What Needs to Be Built
-
-Phase 4 adds two new render targets. The IR pipeline already exists — we just need new renderers.
-
-### Desktop Renderer (tkinter or PyQt6)
-- New file: `src/pyui/renderers/desktop/generator.py`
-- Consumes `IRTree` → creates native widgets
-- `pyui run --target desktop` should open a native window
-- tkinter is the default (zero extra deps), PyQt6 is optional (`pip install pyui-framework[qt]`)
-- Map component types to tkinter widgets: `button→tk.Button`, `text→tk.Label`, `flex→tk.Frame`, etc.
-- Reactivity: subscribe to `ReactiveVar` changes and call widget `.config()` to update
-
-### CLI / TUI Renderer (Rich)
-- New file: `src/pyui/renderers/cli/generator.py`
-- Consumes `IRTree` → Rich renderables / Layout
-- `pyui run --target cli` should render in the terminal
-- Use `rich.layout.Layout` for Flex/Grid, `rich.panel.Panel` for containers, `rich.table.Table` for Table, etc.
-- Interactivity via `prompt_toolkit` (already in spirit of the project)
-
-### CLI Changes Needed
-- `src/pyui/cli/main.py` `cmd_run`: remove the "only web" guard, add desktop/cli dispatch
-- `src/pyui/compiler/__init__.py`: add `compile_app()` routing for new targets
-
-### Key Files to Create for Phase 4
-```
-src/pyui/renderers/desktop/__init__.py
-src/pyui/renderers/desktop/generator.py    # tkinter renderer
-src/pyui/renderers/cli/__init__.py
-src/pyui/renderers/cli/generator.py        # Rich TUI renderer
-```
-
----
-
-## Known Gaps & Things to Watch Out For
-
-- `pyui publish` is a stub — marketplace publishing not implemented yet (Phase 5 remainder)
-- VS Code extension — Phase 6 stretch goal, not built
-- `pyui build --target all` — routes to web only; desktop/cli each need separate build calls
-- Hot reload re-imports the module on every file change — if the app has side effects on import, they will re-run
-- `Text.inject_html()` and `RawHTML` bypass XSS protection — document clearly
-- `REACTIVE_VAR_REGISTRY` is a module-level dict — not thread-safe for multi-user servers (fine for dev server)
-- `_handler_registry` in `ir.py` is also module-level — same caveat
-- `discover_app()` mutates `sys.path` — fine for CLI use, not for library use
-- Multiple App subclasses in one file: only the first is used (warns but doesn't error)
-- `Page.compose()` clears `page.children` before each call to prevent duplication on hot-reload
-
----
-
-## Dependencies
-
-### Runtime
-| Package | Purpose |
-|---|---|
-| `click>=8.1` | CLI framework |
-| `jinja2>=3.1` | Template engine (used in build output) |
-| `aiohttp>=3.9` | Async HTTP dev server |
-| `watchdog>=3.0` | File watching (hot reload, Phase 6) |
-| `rich>=13.0` | Terminal output, CLI renderer |
-| `structlog>=24.0` | Structured logging |
-| `typing-extensions>=4.9` | Backports for Python 3.10 |
-
-### Optional
-| Extra | Package | Purpose |
-|---|---|---|
-| `[qt]` | `PyQt6` | Desktop renderer (Phase 4) |
-| `[images]` | `Pillow` | Image processing |
-| `[e2e]` | `playwright`, `pytest-playwright` | E2E browser tests |
-
-### Dev
-`pytest`, `pytest-cov`, `pytest-asyncio`, `ruff`, `mypy`, `pre-commit`, `hatch`
-
----
-
-## Git Workflow
-
-- Main branch: `main`
-- PR target: `dev` (when it exists)
-- Branch naming: `feat/description`, `fix/description`
-- Pre-commit hooks required before committing
-- Commit style: `feat:`, `fix:`, `chore:`, `docs:` prefixes
+Key changes in v1.5:
+- **ZoltCSS** — replaces Tailwind entirely. Zero CDN. Zero class names visible to developer.
+- **zolt-bundler** — GSAP, Three.js, Alpine.js as local assets. No npm.
+- **Animation Engine** — GSAP-powered, declared in Python.
+- **3D Engine** — Three.js scenes from Python.
+- **Zolt UI** — 80+ prebuilt components on ZoltCSS.
+- **Figma import** — `zolt import figma <url>`
+- **Qt5 + Qt6** desktop upgrade
+- **AI skill files** — 100% API coverage for Claude Code, Cursor, etc.
