@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-
 # ── Dispatch table ────────────────────────────────────────────────────────────
 
 
@@ -18,11 +17,33 @@ def test_widget_builders_cover_all_core_types() -> None:
     from pyui.renderers.desktop.tkinter_renderer import _WIDGET_BUILDERS
 
     required = [
-        "button", "text", "heading", "grid", "flex", "stack",
-        "container", "divider", "spacer", "input", "textarea",
-        "select", "checkbox", "toggle", "slider", "badge", "tag",
-        "avatar", "alert", "progress", "spinner", "skeleton",
-        "table", "stat", "nav", "tabs", "form",
+        "button",
+        "text",
+        "heading",
+        "grid",
+        "flex",
+        "stack",
+        "container",
+        "divider",
+        "spacer",
+        "input",
+        "textarea",
+        "select",
+        "checkbox",
+        "toggle",
+        "slider",
+        "badge",
+        "tag",
+        "avatar",
+        "alert",
+        "progress",
+        "spinner",
+        "skeleton",
+        "table",
+        "stat",
+        "nav",
+        "tabs",
+        "form",
     ]
     for t in required:
         assert t in _WIDGET_BUILDERS, f"Missing widget builder for type: {t}"
@@ -165,8 +186,11 @@ def test_build_widget_stat_with_mock() -> None:
 
 def test_build_widget_table_with_mock() -> None:
     """build_widget for a table must return a Frame."""
-    with patch("tkinter.Frame") as mock_frame, \
-         patch("tkinter.ttk.Treeview"), patch("tkinter.ttk.Scrollbar"):
+    with (
+        patch("tkinter.Frame") as mock_frame,
+        patch("tkinter.ttk.Treeview"),
+        patch("tkinter.ttk.Scrollbar"),
+    ):
         mock_frame.return_value = MagicMock()
         from pyui import Table
         from pyui.compiler.ir import build_ir_node

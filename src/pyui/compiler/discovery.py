@@ -18,7 +18,7 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pyui.exceptions import AppNotFoundError, ModuleImportError, PyUIError
+from pyui.exceptions import AppNotFoundError, ModuleImportError
 
 if TYPE_CHECKING:
     from pyui.app import App

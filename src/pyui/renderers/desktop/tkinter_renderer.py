@@ -128,10 +128,13 @@ def _build_text(node: IRNode, parent: Any) -> Any:
 
         for var, name in REACTIVE_VAR_REGISTRY.items():
             if name in node.reactive_bindings:
+
                 def _make_updater(widget: tk.Label) -> Any:
                     def _update(v: Any) -> None:
                         widget.config(text=str(v))
+
                     return _update
+
                 var.subscribe(_make_updater(lbl))
     return lbl
 
@@ -219,7 +222,9 @@ def _build_divider(node: IRNode, parent: Any) -> Any:
     from typing import Literal
 
     direction = node.props.get("direction", "horizontal")
-    orient: Literal["horizontal", "vertical"] = "vertical" if direction == "vertical" else "horizontal"
+    orient: Literal["horizontal", "vertical"] = (
+        "vertical" if direction == "vertical" else "horizontal"
+    )
     return ttk.Separator(parent, orient=orient)
 
 

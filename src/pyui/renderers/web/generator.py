@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Any
 
 from pyui.compiler.ir import IRNode, IRPage, IRTree, build_ir_node, build_ir_page
 from pyui.renderers.web import tailwind as tw
-from pyui.theme.tokens import BUILT_IN_THEMES, DEFAULT_TOKENS
+from pyui.theme.tokens import DEFAULT_TOKENS
 
 if TYPE_CHECKING:
     from pyui.components.base import BaseComponent
@@ -282,14 +282,17 @@ _PAGE_TEMPLATE = """\
       font-weight: 600;
     }}
 
-    {css_vars}
     {extra_css}
   </style>
-  {dark_mode_script}
+  <style id="pyui-theme-vars">
+    {css_vars}
+  </style>
+  __PYUI_DARK_SCRIPT__
   {favicon_tag}
 </head>
-<body class="bg-white text-gray-900 min-h-screen antialiased theme-transition"
-      x-data='{{alpine_data}}'
+<body class="min-h-screen antialiased theme-transition"
+      style="background-color: var(--pyui-color-background, #fff); color: var(--pyui-color-text, #111827);"
+      x-data="__PYUI_ALPINE_DATA__"
       x-init="lucide.createIcons();
               window.__pyuiPersistentVars.forEach(key => {{
                 const saved = localStorage.getItem('pyui_state_' + key);
@@ -513,6 +516,7 @@ _PAGE_TEMPLATE = """\
 def _build_tokens(theme: str | dict[str, str]) -> dict[str, str]:
     """Merge DEFAULT_TOKENS with theme overrides → flat token dict."""
     from pyui.theme.engine import build_theme
+
     try:
         return build_theme(theme)
     except Exception:
@@ -523,6 +527,7 @@ def _build_tokens(theme: str | dict[str, str]) -> dict[str, str]:
 def _tokens_to_css_vars(tokens: dict[str, str]) -> str:
     """Render tokens as a CSS :root block with --pyui-* variables."""
     from pyui.theme.engine import tokens_to_css_vars
+
     return tokens_to_css_vars(tokens)
 
 
@@ -590,8 +595,9 @@ def _render_node(node: IRNode) -> str:
     # Graceful degradation — a broken component renders an error card, not a crash
     try:
         html = renderer(node)
-    except Exception as exc:
+    except Exception:
         import traceback
+
         tb = html_module.escape(traceback.format_exc())
         return (
             f'<div class="border-2 border-dashed border-orange-400 p-4 rounded text-sm">'
@@ -947,7 +953,7 @@ def _render_label(node_id: str, text: str | None) -> str:
     return (
         f'<label for="{node_id}" '
         f'class="block text-sm font-medium text-gray-700 mb-1.5 tracking-tight">'
-        f'{html_module.escape(text)}</label>'
+        f"{html_module.escape(text)}</label>"
     )
 
 
@@ -1061,9 +1067,9 @@ def _render_toggle(node: IRNode) -> str:
         f'<button type="button" id="{node.node_id}" '
         f'x-data="{{ on: {str(checked).lower()} }}" '
         f'@click="on = !on" '
-        f':class="on ? \'{on_cls}\' : \'{off_cls}\'" '
+        f":class=\"on ? '{on_cls}' : '{off_cls}'\" "
         f'role="switch" aria-checked="{static_aria}" :aria-checked="on">\n'
-        f'  <span :class="on ? \'{on_knob}\' : \'{off_knob}\'"></span>\n'
+        f"  <span :class=\"on ? '{on_knob}' : '{off_knob}'\"></span>\n"
         f"</button>"
     )
     if label_text:
@@ -1161,9 +1167,9 @@ def _render_alert(node: IRNode) -> str:
     if show_icon:
         icon_name = {
             "success": "check-circle",
-            "danger":  "alert-circle",
+            "danger": "alert-circle",
             "warning": "alert-triangle",
-            "info":    "info",
+            "info": "info",
         }.get(node.style_variant or "info", "info")
         icon_html = (
             f'<div class="flex-shrink-0">'
@@ -1639,29 +1645,34 @@ class WebGenerator:
         if favicon:
             favicon_tag = f'<link rel="icon" href="{html_module.escape(favicon)}" />'
 
-        from pyui.theme.engine import dark_mode_script
+        from pyui.theme.engine import dark_mode_script, theme_swap_script
 
-        pages_json = json.dumps([
-            {"route": p.route, "title": p.title or p.route}
-            for p in self.ir_tree.pages
-        ])
+        pages_json = json.dumps(
+            [{"route": p.route, "title": p.title or p.route} for p in self.ir_tree.pages]
+        )
 
-        return _PAGE_TEMPLATE.format(
-            title=html_module.escape(
-                ir_page.title or self.ir_tree.app_meta.get("name", "PyUI App")
-            ),
-            description=html_module.escape(self.ir_tree.app_meta.get("description", "")),
-            css_vars=css_vars,
-            extra_css="",
-            dark_mode_script=dark_mode_script(),
-            favicon_tag=favicon_tag,
-            alpine_data=alpine_data,
-            layout_class=layout_class,
-            content=content,
-            state_json=state_json,
-            node_state_json=node_state_json,
-            persistent_vars_json=persistent_vars_json,
-            pages_json=pages_json,
+        # Scripts contain JS braces { } which break str.format().
+        # We use sentinels in the template and replace them AFTER .format() runs.
+        combined_scripts = dark_mode_script() + "\n  " + theme_swap_script()
+
+        return (
+            _PAGE_TEMPLATE.format(
+                title=html_module.escape(
+                    ir_page.title or self.ir_tree.app_meta.get("name", "PyUI App")
+                ),
+                description=html_module.escape(self.ir_tree.app_meta.get("description", "")),
+                css_vars=css_vars,
+                extra_css="",
+                favicon_tag=favicon_tag,
+                layout_class=layout_class,
+                content=content,
+                state_json=state_json,
+                node_state_json=node_state_json,
+                persistent_vars_json=persistent_vars_json,
+                pages_json=pages_json,
+            )
+            .replace("__PYUI_DARK_SCRIPT__", combined_scripts)
+            .replace('"__PYUI_ALPINE_DATA__"', "'" + alpine_data.replace("'", "&#39;") + "'")
         )
 
     def write_to_disk(self, output_dir: Path) -> dict[str, Any]:

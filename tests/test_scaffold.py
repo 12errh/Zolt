@@ -7,6 +7,7 @@ from pathlib import Path
 
 def test_scaffold_blank_creates_files(tmp_path: Path) -> None:
     import os
+
     from pyui.scaffold import create_project
 
     os.chdir(tmp_path)
@@ -18,7 +19,9 @@ def test_scaffold_blank_creates_files(tmp_path: Path) -> None:
 
 
 def test_scaffold_app_py_is_valid_python(tmp_path: Path) -> None:
-    import ast, os
+    import ast
+    import os
+
     from pyui.scaffold import create_project
 
     os.chdir(tmp_path)
@@ -29,6 +32,7 @@ def test_scaffold_app_py_is_valid_python(tmp_path: Path) -> None:
 
 def test_scaffold_dashboard_template(tmp_path: Path) -> None:
     import os
+
     from pyui.scaffold import create_project
 
     os.chdir(tmp_path)
@@ -40,6 +44,7 @@ def test_scaffold_dashboard_template(tmp_path: Path) -> None:
 
 def test_scaffold_class_name_from_project_name(tmp_path: Path) -> None:
     import os
+
     from pyui.scaffold import create_project
 
     os.chdir(tmp_path)
@@ -50,19 +55,21 @@ def test_scaffold_class_name_from_project_name(tmp_path: Path) -> None:
 
 def test_scaffold_existing_dir_raises(tmp_path: Path) -> None:
     import os
+
     from pyui.scaffold import create_project
 
     os.chdir(tmp_path)
     create_project("existing", template="blank")
     try:
         create_project("existing", template="blank")
-        assert False, "Should have raised FileExistsError"
+        raise AssertionError("Should have raised FileExistsError")
     except FileExistsError:
         pass
 
 
 def test_scaffold_requirements_has_pyui(tmp_path: Path) -> None:
     import os
+
     from pyui.scaffold import create_project
 
     os.chdir(tmp_path)

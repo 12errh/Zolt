@@ -208,7 +208,7 @@ def cmd_publish(name: str | None, build_only: bool) -> None:
         console.print(
             "[red]Error:[/red] No [cyan]pyui.json[/cyan] found in the current directory.\n\n"
             "Create one with the following structure:\n"
-            '[dim]{\n'
+            "[dim]{\n"
             '  "name": "zolt-my-component",\n'
             '  "version": "1.0.0",\n'
             '  "pyui_version": ">=1.0.0",\n'
@@ -216,7 +216,7 @@ def cmd_publish(name: str | None, build_only: bool) -> None:
             '  "targets": ["web"],\n'
             '  "author": "Your Name",\n'
             '  "license": "MIT"\n'
-            '}[/dim]'
+            "}[/dim]"
         )
         raise SystemExit(1) from None
 
@@ -329,11 +329,13 @@ def cmd_doctor() -> None:
         ) as r:
             latest = _json.loads(r.read())["info"]["version"]
         up_to_date = latest == pyui.__version__
-        results.append((
-            "Zolt version",
-            f"{pyui.__version__} (latest: {latest})",
-            "✓" if up_to_date else f"↑ {latest} available",
-        ))
+        results.append(
+            (
+                "Zolt version",
+                f"{pyui.__version__} (latest: {latest})",
+                "✓" if up_to_date else f"↑ {latest} available",
+            )
+        )
     except Exception:
         results.append(("Zeno version", pyui.__version__, "✓ (PyPI check skipped)"))
 
@@ -348,11 +350,13 @@ def cmd_doctor() -> None:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.settimeout(0.2)
             in_use = s.connect_ex(("localhost", port)) == 0
-        results.append((
-            f"Port {port}",
-            "in use" if in_use else "available",
-            "⚠ choose another port" if in_use else "✓",
-        ))
+        results.append(
+            (
+                f"Port {port}",
+                "in use" if in_use else "available",
+                "⚠ choose another port" if in_use else "✓",
+            )
+        )
 
     results.append(("Platform", f"{platform.system()} {platform.release()}", "✓"))
 
@@ -379,6 +383,7 @@ def cmd_lint(app_file: str) -> None:
 
     try:
         from pyui.compiler.discovery import discover_app
+
         AppClass = discover_app(app_file)
     except Exception as exc:
         console.print(f"[red]Error:[/red] {exc}")
@@ -400,7 +405,9 @@ def cmd_lint(app_file: str) -> None:
 
 @main.command("storybook")
 @click.option("--port", "-p", default=9000, show_default=True, help="Storybook port.")
-@click.option("--no-browser", is_flag=True, default=False, help="Do not open browser automatically.")
+@click.option(
+    "--no-browser", is_flag=True, default=False, help="Do not open browser automatically."
+)
 def cmd_storybook(port: int, no_browser: bool) -> None:
     """Open the component storybook (gallery)."""
     from pyui.cli.storybook import run_storybook

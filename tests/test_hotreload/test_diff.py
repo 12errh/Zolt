@@ -5,11 +5,18 @@ from __future__ import annotations
 from pyui.compiler.ir import IRNode
 
 
-def _node(type: str, props: dict, children: list = [], variant: str | None = None) -> IRNode:
+def _node(type: str, props: dict, children: list = None, variant: str | None = None) -> IRNode:
+    if children is None:
+        children = []
     return IRNode(
-        type=type, props=props, children=children, events={},
-        reactive_bindings=[], reactive_props={},
-        style_variant=variant, theme_tokens={},
+        type=type,
+        props=props,
+        children=children,
+        events={},
+        reactive_bindings=[],
+        reactive_props={},
+        style_variant=variant,
+        theme_tokens={},
     )
 
 

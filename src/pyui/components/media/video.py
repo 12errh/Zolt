@@ -8,8 +8,14 @@ class Video(BaseComponent):
 
     component_type = "video"
 
-    def __init__(self, src: str, poster: str | None = None, controls: bool = True,
-                 autoplay: bool = False, loop: bool = False) -> None:
+    def __init__(
+        self,
+        src: str,
+        poster: str | None = None,
+        controls: bool = True,
+        autoplay: bool = False,
+        loop: bool = False,
+    ) -> None:
         super().__init__()
         self.props.update(
             {

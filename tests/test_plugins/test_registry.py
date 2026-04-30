@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import pytest
 
-
 # ── Registry ──────────────────────────────────────────────────────────────────
 
 
@@ -125,9 +124,9 @@ def test_plugin_lifecycle_hooks_are_callable() -> None:
 
 
 def test_plugin_subclass_on_load_called() -> None:
+    from pyui.components.base import BaseComponent
     from pyui.plugins.base import PyUIPlugin
     from pyui.plugins.registry import clear_registry, get_component, register_component
-    from pyui.components.base import BaseComponent
 
     clear_registry()
 

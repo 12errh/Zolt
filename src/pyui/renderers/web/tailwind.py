@@ -145,8 +145,7 @@ _HEADING_LEVEL_CLASSES: dict[int, str] = {
 _HEADING_VARIANTS: dict[str | None, str] = {
     # Rich violet → indigo gradient — premium, not garish
     "gradient": (
-        "bg-gradient-to-br from-gray-900 via-violet-800 to-indigo-700 "
-        "bg-clip-text text-transparent"
+        "bg-gradient-to-br from-gray-900 via-violet-800 to-indigo-700 bg-clip-text text-transparent"
     ),
     "muted": "text-gray-400 font-normal",
     # Display: editorial, oversized
@@ -252,14 +251,14 @@ _BADGE_BASE = (
     "text-xs font-medium tracking-wide border"
 )
 _BADGE_VARIANTS = {
-    "primary":   "bg-violet-50 text-violet-700 border-violet-200/80",
+    "primary": "bg-violet-50 text-violet-700 border-violet-200/80",
     "secondary": "bg-gray-50 text-gray-600 border-gray-200",
-    "success":   "bg-emerald-50 text-emerald-700 border-emerald-200/80",
-    "danger":    "bg-red-50 text-red-600 border-red-200/80",
-    "warning":   "bg-amber-50 text-amber-700 border-amber-200/80",
-    "info":      "bg-sky-50 text-sky-700 border-sky-200/80",
-    "dark":      "bg-gray-900 text-gray-100 border-gray-800",
-    None:        "bg-violet-50 text-violet-700 border-violet-200/80",
+    "success": "bg-emerald-50 text-emerald-700 border-emerald-200/80",
+    "danger": "bg-red-50 text-red-600 border-red-200/80",
+    "warning": "bg-amber-50 text-amber-700 border-amber-200/80",
+    "info": "bg-sky-50 text-sky-700 border-sky-200/80",
+    "dark": "bg-gray-900 text-gray-100 border-gray-800",
+    None: "bg-violet-50 text-violet-700 border-violet-200/80",
 }
 
 
@@ -276,11 +275,11 @@ _TAG_BASE = (
     "text-sm font-medium border transition-colors duration-150"
 )
 _TAG_VARIANTS = {
-    "primary":   "bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100",
+    "primary": "bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100",
     "secondary": "bg-white text-gray-600 border-gray-200 hover:bg-gray-50",
-    "success":   "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100",
-    "danger":    "bg-red-50 text-red-600 border-red-200 hover:bg-red-100",
-    None:        "bg-white text-gray-600 border-gray-200 hover:bg-gray-50",
+    "success": "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100",
+    "danger": "bg-red-50 text-red-600 border-red-200 hover:bg-red-100",
+    None: "bg-white text-gray-600 border-gray-200 hover:bg-gray-50",
 }
 
 
@@ -292,11 +291,11 @@ def tag_classes(variant: str | None) -> str:
 # Ring on hover, warm gray fallback, precise size scale.
 
 _AVATAR_SIZES = {
-    "xs":  "h-6 w-6 text-[9px]",
-    "sm":  "h-8 w-8 text-[11px]",
-    "md":  "h-10 w-10 text-sm",
-    "lg":  "h-12 w-12 text-base",
-    "xl":  "h-16 w-16 text-xl",
+    "xs": "h-6 w-6 text-[9px]",
+    "sm": "h-8 w-8 text-[11px]",
+    "md": "h-10 w-10 text-sm",
+    "lg": "h-12 w-12 text-base",
+    "xl": "h-16 w-16 text-xl",
     "2xl": "h-20 w-20 text-2xl",
 }
 
@@ -325,10 +324,10 @@ def icon_classes(color: str | None) -> str:
 # Rounded corners, subtle shadow, overflow hidden for clean edges.
 
 _IMAGE_FITS = {
-    "cover":      "object-cover",
-    "contain":    "object-contain",
-    "fill":       "object-fill",
-    "none":       "object-none",
+    "cover": "object-cover",
+    "contain": "object-contain",
+    "fill": "object-fill",
+    "none": "object-none",
     "scale-down": "object-scale-down",
 }
 
@@ -340,6 +339,7 @@ def image_classes(fit: str | None) -> str:
 
 # ── Markdown ──────────────────────────────────────────────────────────────────
 # Prose with tighter line-height and refined link colors.
+
 
 def markdown_classes() -> str:
     return (
@@ -353,6 +353,7 @@ def markdown_classes() -> str:
 
 
 # ── Video ─────────────────────────────────────────────────────────────────────
+
 
 def video_classes() -> str:
     return "rounded-2xl w-full aspect-video bg-gray-950 shadow-xl overflow-hidden"
@@ -377,6 +378,7 @@ def input_classes() -> str:
 
 # ── Textarea ──────────────────────────────────────────────────────────────────
 
+
 def textarea_classes() -> str:
     return (
         "block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 "
@@ -388,6 +390,7 @@ def textarea_classes() -> str:
 
 
 # ── Select ────────────────────────────────────────────────────────────────────
+
 
 def select_classes() -> str:
     return (
@@ -403,6 +406,7 @@ def select_classes() -> str:
 # ── Checkbox ──────────────────────────────────────────────────────────────────
 # Larger hit area, sharp corners, strong checked state.
 
+
 def checkbox_classes() -> str:
     return (
         "h-4 w-4 rounded border-gray-300 bg-white text-gray-900 shadow-sm "
@@ -414,6 +418,7 @@ def checkbox_classes() -> str:
 
 # ── Toggle (Switch) ───────────────────────────────────────────────────────────
 # Smooth, satisfying. Dark checked state. Pill shape.
+
 
 def toggle_classes(checked: bool) -> str:
     bg = "bg-gray-900" if checked else "bg-gray-200"
@@ -436,6 +441,7 @@ def toggle_knob_classes(checked: bool) -> str:
 # ── Slider ────────────────────────────────────────────────────────────────────
 # Thin track, dark thumb. Clean and precise.
 
+
 def slider_classes() -> str:
     return (
         "w-full h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer "
@@ -448,6 +454,7 @@ def slider_classes() -> str:
 
 # ── DatePicker ────────────────────────────────────────────────────────────────
 
+
 def datepicker_classes() -> str:
     return (
         "block w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 "
@@ -458,6 +465,7 @@ def datepicker_classes() -> str:
 
 
 # ── FilePicker ────────────────────────────────────────────────────────────────
+
 
 def filepicker_classes() -> str:
     return (
@@ -471,6 +479,7 @@ def filepicker_classes() -> str:
 
 # ── Form ──────────────────────────────────────────────────────────────────────
 # Card-like container. Clean white, subtle border, generous padding.
+
 
 def form_classes() -> str:
     return (
@@ -486,11 +495,11 @@ def form_classes() -> str:
 
 _ALERT_BASE = "flex gap-3 p-4 rounded-xl border-l-4 bg-white shadow-sm border border-gray-100"
 _ALERT_VARIANTS = {
-    "info":    "border-l-sky-500 [&_.alert-icon]:text-sky-500 [&_.alert-title]:text-sky-900 [&_.alert-body]:text-sky-700",
+    "info": "border-l-sky-500 [&_.alert-icon]:text-sky-500 [&_.alert-title]:text-sky-900 [&_.alert-body]:text-sky-700",
     "success": "border-l-emerald-500 [&_.alert-icon]:text-emerald-500 [&_.alert-title]:text-emerald-900 [&_.alert-body]:text-emerald-700",
     "warning": "border-l-amber-500 [&_.alert-icon]:text-amber-500 [&_.alert-title]:text-amber-900 [&_.alert-body]:text-amber-700",
-    "danger":  "border-l-red-500 [&_.alert-icon]:text-red-500 [&_.alert-title]:text-red-900 [&_.alert-body]:text-red-700",
-    None:      "border-l-sky-500 [&_.alert-icon]:text-sky-500 [&_.alert-title]:text-sky-900 [&_.alert-body]:text-sky-700",
+    "danger": "border-l-red-500 [&_.alert-icon]:text-red-500 [&_.alert-title]:text-red-900 [&_.alert-body]:text-red-700",
+    None: "border-l-sky-500 [&_.alert-icon]:text-sky-500 [&_.alert-title]:text-sky-900 [&_.alert-body]:text-sky-700",
 }
 
 
@@ -502,6 +511,7 @@ def alert_classes(variant: str | None) -> str:
 # Floating card with strong shadow. Dark background for contrast.
 # Positioned bottom-right, max-width constrained.
 
+
 def toast_classes(variant: str | None) -> str:
     base = (
         "fixed bottom-6 right-6 z-50 flex items-start gap-3 w-full max-w-sm "
@@ -511,7 +521,7 @@ def toast_classes(variant: str | None) -> str:
     accent = {
         "primary": "border-l-4 border-l-violet-500",
         "success": "border-l-4 border-l-emerald-500",
-        "danger":  "border-l-4 border-l-red-500",
+        "danger": "border-l-4 border-l-red-500",
         "warning": "border-l-4 border-l-amber-500",
     }
     return f"{base} {accent.get(variant or '', '')}"
@@ -520,11 +530,9 @@ def toast_classes(variant: str | None) -> str:
 # ── Modal ─────────────────────────────────────────────────────────────────────
 # Frosted glass overlay. Panel with generous padding and strong shadow.
 
+
 def modal_overlay_classes() -> str:
-    return (
-        "fixed inset-0 bg-gray-950/60 backdrop-blur-sm z-40 "
-        "transition-opacity duration-200"
-    )
+    return "fixed inset-0 bg-gray-950/60 backdrop-blur-sm z-40 transition-opacity duration-200"
 
 
 def modal_panel_classes() -> str:
@@ -537,6 +545,7 @@ def modal_panel_classes() -> str:
 
 # ── Drawer ────────────────────────────────────────────────────────────────────
 # Slides in from the side. Frosted overlay, clean panel.
+
 
 def drawer_overlay_classes() -> str:
     return "fixed inset-0 bg-gray-950/50 backdrop-blur-sm z-40 transition-opacity duration-300"
@@ -554,6 +563,7 @@ def drawer_panel_classes(side: str = "right") -> str:
 # ── Tooltip ───────────────────────────────────────────────────────────────────
 # Dark, compact, sharp. Appears above the target.
 
+
 def tooltip_classes() -> str:
     return (
         "absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 "
@@ -566,6 +576,7 @@ def tooltip_classes() -> str:
 
 # ── Progress ──────────────────────────────────────────────────────────────────
 # Thin, elegant. Gradient fill for visual interest.
+
 
 def progress_base_classes() -> str:
     return "w-full bg-gray-100 rounded-full h-1.5 overflow-hidden"
@@ -598,6 +609,7 @@ def spinner_classes(size: str) -> str:
 # ── Skeleton ──────────────────────────────────────────────────────────────────
 # Shimmer animation instead of plain pulse. More premium feel.
 
+
 def skeleton_classes(variant: str) -> str:
     base = "skeleton-shimmer"
     if variant == "circle":
@@ -614,6 +626,7 @@ def skeleton_classes(variant: str) -> str:
 # Pagination: bordered items, strong active state.
 # Menu: floating card with hover rows.
 
+
 def nav_classes() -> str:
     return "flex items-center gap-1 text-sm font-medium"
 
@@ -626,9 +639,7 @@ def nav_item_classes(active: bool) -> str:
 
 
 def tabs_list_classes() -> str:
-    return (
-        "inline-flex items-center gap-0.5 rounded-xl bg-gray-100/80 p-1 mb-6"
-    )
+    return "inline-flex items-center gap-0.5 rounded-xl bg-gray-100/80 p-1 mb-6"
 
 
 def tab_item_classes(active: bool) -> str:
@@ -677,6 +688,7 @@ def menu_item_classes() -> str:
 # Stat card: large number, tight label, trend indicator.
 # Chart: white card, generous padding, rounded corners.
 
+
 def table_base_classes() -> str:
     return "min-w-full divide-y divide-gray-100"
 
@@ -718,10 +730,10 @@ def chart_container_classes() -> str:
 # ── Page layouts ──────────────────────────────────────────────────────────────
 
 PAGE_LAYOUT_CLASSES: dict[str, str] = {
-    "default":    "container mx-auto px-6 py-10 max-w-7xl",
+    "default": "container mx-auto px-6 py-10 max-w-7xl",
     "full-width": "w-full",
-    "sidebar":    "flex gap-8 px-6 py-10 max-w-7xl mx-auto",
-    "auth":       "min-h-screen flex items-center justify-center bg-gray-50 px-4",
+    "sidebar": "flex gap-8 px-6 py-10 max-w-7xl mx-auto",
+    "auth": "min-h-screen flex items-center justify-center bg-gray-50 px-4",
 }
 
 
@@ -729,12 +741,12 @@ PAGE_LAYOUT_CLASSES: dict[str, str] = {
 # Slightly more generous padding than before.
 
 _CONTAINER_SIZES = {
-    "sm":   "max-w-screen-sm",
-    "md":   "max-w-screen-md",
-    "lg":   "max-w-screen-lg",
-    "xl":   "max-w-screen-xl",
-    "2xl":  "max-w-screen-2xl",
-    "6xl":  "max-w-[1400px]",
+    "sm": "max-w-screen-sm",
+    "md": "max-w-screen-md",
+    "lg": "max-w-screen-lg",
+    "xl": "max-w-screen-xl",
+    "2xl": "max-w-screen-2xl",
+    "6xl": "max-w-[1400px]",
     "full": "max-w-full",
 }
 
@@ -748,6 +760,7 @@ def container_classes(size: str, centered: bool) -> str:
 # ── Divider ───────────────────────────────────────────────────────────────────
 # Hairline — barely visible, just enough to separate.
 
+
 def divider_classes(direction: str, has_label: bool) -> str:
     if direction == "vertical":
         return "inline-block flex-shrink-0 w-px self-stretch bg-gray-100 mx-3"
@@ -757,6 +770,7 @@ def divider_classes(direction: str, has_label: bool) -> str:
 
 
 # ── Spacer ────────────────────────────────────────────────────────────────────
+
 
 def spacer_classes(size: int | None) -> str:
     if size is None:

@@ -8,6 +8,7 @@ import time
 def test_file_change_triggers_callback(tmp_path: object) -> None:
     """Writing a .py file must fire the on_change callback."""
     from pathlib import Path
+
     from pyui.hotreload.watcher import FileWatcher
 
     assert isinstance(tmp_path, Path)
@@ -29,6 +30,7 @@ def test_file_change_triggers_callback(tmp_path: object) -> None:
 def test_non_py_file_does_not_trigger(tmp_path: object) -> None:
     """Changing a .txt file must NOT fire the callback."""
     from pathlib import Path
+
     from pyui.hotreload.watcher import FileWatcher
 
     assert isinstance(tmp_path, Path)
@@ -50,6 +52,7 @@ def test_non_py_file_does_not_trigger(tmp_path: object) -> None:
 def test_watcher_context_manager(tmp_path: object) -> None:
     """FileWatcher must work as a context manager."""
     from pathlib import Path
+
     from pyui.hotreload.watcher import FileWatcher
 
     assert isinstance(tmp_path, Path)

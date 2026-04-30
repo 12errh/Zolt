@@ -21,7 +21,7 @@ from __future__ import annotations
 import inspect
 from typing import Any
 
-from pyui.exceptions import MissingRouteError, PyUIError
+from pyui.exceptions import MissingRouteError
 from pyui.page import Page
 
 

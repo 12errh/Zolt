@@ -74,6 +74,12 @@ target-version = "py310"
 select = ["E", "F", "I", "UP", "B", "SIM"]
 ignore = ["E501"]
 
+[tool.ruff.lint.per-file-ignores]
+# Storybook and landing use intentional nested `with` blocks for PyUI's
+# declarative composition pattern — outer = parent, inner = child component.
+"src/pyui/cli/storybook.py" = ["SIM117"]
+"tests/landing.py" = ["SIM117"]
+
 [tool.mypy]
 python_version = "3.10"
 strict = true

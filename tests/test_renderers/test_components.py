@@ -7,53 +7,50 @@ and asserts that the output contains the expected HTML attributes and content.
 
 from __future__ import annotations
 
-import pytest
-
-from pyui.renderers.web.generator import render_component, render_page
-from pyui.components.display.text import Text
-from pyui.components.display.heading import Heading
-from pyui.components.display.badge import Badge
-from pyui.components.display.tag import Tag
+from pyui.components.data.chart import Chart
+from pyui.components.data.stat import Stat
+from pyui.components.data.table import Table
 from pyui.components.display.avatar import Avatar
+from pyui.components.display.badge import Badge
+from pyui.components.display.heading import Heading
 from pyui.components.display.icon import Icon
 from pyui.components.display.image import Image
 from pyui.components.display.markdown import Markdown
+from pyui.components.display.tag import Tag
+from pyui.components.display.text import Text
+from pyui.components.feedback.alert import Alert
+from pyui.components.feedback.drawer import Drawer
+from pyui.components.feedback.modal import Modal
+from pyui.components.feedback.progress import Progress
+from pyui.components.feedback.skeleton import Skeleton
+from pyui.components.feedback.spinner import Spinner
+from pyui.components.feedback.toast import Toast
+from pyui.components.feedback.tooltip import Tooltip
 from pyui.components.input.button import Button
-from pyui.components.input.input import Input
-from pyui.components.input.textarea import Textarea
-from pyui.components.input.select import Select
 from pyui.components.input.checkbox import Checkbox
-from pyui.components.input.radio import Radio
-from pyui.components.input.toggle import Toggle
-from pyui.components.input.slider import Slider
 from pyui.components.input.datepicker import DatePicker
 from pyui.components.input.filepicker import FilePicker
 from pyui.components.input.form import Form
-from pyui.components.layout.flex import Flex
-from pyui.components.layout.grid import Grid
-from pyui.components.layout.stack import Stack
+from pyui.components.input.input import Input
+from pyui.components.input.radio import Radio
+from pyui.components.input.select import Select
+from pyui.components.input.slider import Slider
+from pyui.components.input.textarea import Textarea
+from pyui.components.input.toggle import Toggle
 from pyui.components.layout.container import Container
 from pyui.components.layout.divider import Divider
+from pyui.components.layout.flex import Flex
+from pyui.components.layout.grid import Grid
 from pyui.components.layout.spacer import Spacer
-from pyui.components.feedback.alert import Alert
-from pyui.components.feedback.progress import Progress
-from pyui.components.feedback.spinner import Spinner
-from pyui.components.feedback.skeleton import Skeleton
-from pyui.components.feedback.toast import Toast
-from pyui.components.feedback.modal import Modal
-from pyui.components.feedback.drawer import Drawer
-from pyui.components.feedback.tooltip import Tooltip
-from pyui.components.navigation.nav import Nav
-from pyui.components.navigation.breadcrumb import Breadcrumb
-from pyui.components.navigation.pagination import Pagination
-from pyui.components.navigation.menu import Menu
-from pyui.components.navigation.tabs import Tabs
-from pyui.components.data.table import Table
-from pyui.components.data.stat import Stat
-from pyui.components.data.chart import Chart
+from pyui.components.layout.stack import Stack
 from pyui.components.media.video import Video
+from pyui.components.navigation.breadcrumb import Breadcrumb
+from pyui.components.navigation.menu import Menu
+from pyui.components.navigation.nav import Nav
+from pyui.components.navigation.pagination import Pagination
+from pyui.components.navigation.tabs import Tabs
 from pyui.page import Page
-
+from pyui.renderers.web.generator import render_component, render_page
 
 # ── Display ───────────────────────────────────────────────────────────────────
 
@@ -558,16 +555,12 @@ class TestTable:
         assert "<table" in html
 
     def test_renders_rows(self):
-        html = render_component(
-            Table(headers=["Name"], rows=[["Alice"], ["Bob"]])
-        )
+        html = render_component(Table(headers=["Name"], rows=[["Alice"], ["Bob"]]))
         assert "Alice" in html
         assert "Bob" in html
 
     def test_escapes_cell_content(self):
-        html = render_component(
-            Table(headers=["X"], rows=[["<script>alert(1)</script>"]])
-        )
+        html = render_component(Table(headers=["X"], rows=[["<script>alert(1)</script>"]]))
         assert "<script>" not in html
 
 
@@ -590,15 +583,11 @@ class TestStat:
 
 class TestChart:
     def test_renders_canvas(self):
-        html = render_component(
-            Chart(type="line", labels=["A", "B"], datasets=[{"data": [1, 2]}])
-        )
+        html = render_component(Chart(type="line", labels=["A", "B"], datasets=[{"data": [1, 2]}]))
         assert "<canvas" in html
 
     def test_chart_js_init(self):
-        html = render_component(
-            Chart(type="bar", labels=["X"], datasets=[{"data": [5]}])
-        )
+        html = render_component(Chart(type="bar", labels=["X"], datasets=[{"data": [5]}]))
         assert "Chart" in html
         assert "chartConfig" in html
 

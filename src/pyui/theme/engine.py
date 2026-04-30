@@ -16,7 +16,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from pyui.exceptions import ThemeError, UnknownThemeError
+from pyui.exceptions import UnknownThemeError
 from pyui.theme.tokens import BUILT_IN_THEMES, DEFAULT_TOKENS
 
 
@@ -71,30 +71,108 @@ def build_theme(theme: str | dict[str, str]) -> dict[str, str]:
 
 def tokens_to_css_vars(tokens: dict[str, str]) -> str:
     """
-    Render a token dict as a CSS ``:root`` block with ``--pyui-*`` variables.
-
-    Parameters
-    ----------
-    tokens : dict[str, str]
-        Flat token dict (output of :func:`build_theme`).
-
-    Returns
-    -------
-    str
-        CSS string, e.g.::
-
-            :root {
-              --pyui-color-primary: #6C63FF;
-              --pyui-font-family: Inter, system-ui, sans-serif;
-              ...
-            }
+    Render a token dict as a CSS ``:root`` block with ``--pyui-*`` variables,
+    plus concrete CSS overrides so Tailwind-hardcoded classes pick up the theme.
     """
     lines = [":root {"]
     for key, value in tokens.items():
         css_name = "--pyui-" + key.replace(".", "-")
         lines.append(f"  {css_name}: {value};")
     lines.append("}")
-    return "\n".join(lines)
+
+    # ── Concrete overrides ────────────────────────────────────────────────────
+    # Components use hardcoded Tailwind classes. We override the key ones so
+    # the theme colours actually show up without touching component code.
+    bg = tokens.get("color.background", "#FFFFFF")
+    surf = tokens.get("color.surface", "#F9FAFB")
+    text = tokens.get("color.text", "#111827")
+    muted = tokens.get("color.text.muted", "#6B7280")
+    bord = tokens.get("color.border", "#E5E7EB")
+    prim = tokens.get("color.primary", "#6C63FF")
+    prim_h = tokens.get("color.primary.hover", "#5A52E0")
+    sec = tokens.get("color.secondary", "#F3F4F6")
+
+    # Determine if this is a dark theme (dark background)
+    is_dark = _is_dark_color(bg)
+
+    overrides = f"""
+/* PyUI theme overrides — applied over Tailwind defaults */
+body {{
+  background-color: {bg} !important;
+  color: {text} !important;
+}}
+/* Surface / card backgrounds */
+.bg-white, [class*="bg-white"] {{
+  background-color: {surf} !important;
+}}
+/* Gray-50 / gray-100 surfaces */
+.bg-gray-50 {{ background-color: {_blend(bg, surf, 0.5)} !important; }}
+.bg-gray-100 {{ background-color: {sec} !important; }}
+.bg-gray-900 {{ background-color: {_darken(bg, 0.15) if not is_dark else _lighten(bg, 0.08)} !important; }}
+.bg-gray-950 {{ background-color: {prim} !important; }}
+/* Text colours */
+.text-gray-900, .text-gray-950 {{ color: {text} !important; }}
+.text-gray-800 {{ color: {text} !important; }}
+.text-gray-700 {{ color: {muted} !important; }}
+.text-gray-600, .text-gray-500, .text-gray-400 {{ color: {muted} !important; }}
+/* Borders */
+.border-gray-100, .border-gray-200 {{ border-color: {bord} !important; }}
+.border-gray-300 {{ border-color: {bord} !important; }}
+/* Primary action colour (buttons, accents) */
+.bg-gray-800:not([class*="hover"]) {{ background-color: {prim_h} !important; }}
+/* Page wrapper */
+#pyui-app {{ background-color: {bg}; }}
+/* Sidebar / nav */
+.bg-\\[\\#f7f7f8\\] {{ background-color: {_blend(bg, surf, 0.3)} !important; }}
+"""
+    return "\n".join(lines) + overrides
+
+
+def _is_dark_color(hex_color: str) -> bool:
+    """Return True if the hex colour is perceptually dark."""
+    try:
+        h = hex_color.lstrip("#")
+        r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+        # Perceived luminance
+        return (0.299 * r + 0.587 * g + 0.114 * b) < 128
+    except Exception:
+        return False
+
+
+def _darken(hex_color: str, amount: float) -> str:
+    """Darken a hex colour by *amount* (0–1)."""
+    try:
+        h = hex_color.lstrip("#")
+        r = max(0, int(int(h[0:2], 16) * (1 - amount)))
+        g = max(0, int(int(h[2:4], 16) * (1 - amount)))
+        b = max(0, int(int(h[4:6], 16) * (1 - amount)))
+        return f"#{r:02x}{g:02x}{b:02x}"
+    except Exception:
+        return hex_color
+
+
+def _lighten(hex_color: str, amount: float) -> str:
+    """Lighten a hex colour by *amount* (0–1)."""
+    try:
+        h = hex_color.lstrip("#")
+        r = min(255, int(int(h[0:2], 16) + (255 - int(h[0:2], 16)) * amount))
+        g = min(255, int(int(h[2:4], 16) + (255 - int(h[2:4], 16)) * amount))
+        b = min(255, int(int(h[4:6], 16) + (255 - int(h[4:6], 16)) * amount))
+        return f"#{r:02x}{g:02x}{b:02x}"
+    except Exception:
+        return hex_color
+
+
+def _blend(c1: str, c2: str, t: float) -> str:
+    """Linear blend between two hex colours at ratio *t* (0=c1, 1=c2)."""
+    try:
+        h1, h2 = c1.lstrip("#"), c2.lstrip("#")
+        r = int(int(h1[0:2], 16) * (1 - t) + int(h2[0:2], 16) * t)
+        g = int(int(h1[2:4], 16) * (1 - t) + int(h2[2:4], 16) * t)
+        b = int(int(h1[4:6], 16) * (1 - t) + int(h2[4:6], 16) * t)
+        return f"#{r:02x}{g:02x}{b:02x}"
+    except Exception:
+        return c1
 
 
 def tokens_to_figma(tokens: dict[str, str]) -> str:
@@ -163,9 +241,25 @@ _DARK_MODE_JS = """\
   (function() {
     var stored = localStorage.getItem('pyui-theme');
     var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    if (stored === 'dark' || (!stored && prefersDark)) {
+
+    // If a theme is stored, load it immediately
+    if (stored) {
+      document.documentElement.classList.toggle('dark', stored === 'dark');
+      // Fetch and apply the stored theme CSS vars
+      fetch('/pyui-api/theme/' + stored, { method: 'POST' })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var style = document.getElementById('pyui-theme-vars');
+          if (style) style.textContent = d.css;
+        })
+        .catch(function(e) {
+          console.warn('[PyUI] Failed to load stored theme:', e);
+        });
+    } else if (prefersDark) {
       document.documentElement.classList.add('dark');
     }
+
+    // Listen for system preference changes
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
       if (!localStorage.getItem('pyui-theme')) {
         document.documentElement.classList.toggle('dark', e.matches);
@@ -184,16 +278,15 @@ def dark_mode_script() -> str:
 
 _THEME_SWAP_JS = """\
 <script>
-  function pyuiSetTheme(name) {{
+  function pyuiSetTheme(name) {
     localStorage.setItem('pyui-theme', name);
-    fetch('/pyui-api/theme/' + name, {{ method: 'POST' }})
-      .then(r => r.json())
-      .then(d => {{
-        var style = document.getElementById('pyui-theme-vars');
-        if (style) style.textContent = d.css;
-        document.documentElement.classList.toggle('dark', name === 'dark');
-      }});
-  }}
+    fetch('/pyui-api/theme/' + name, { method: 'POST' })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        // Reload so the server re-renders the page with the new theme tokens
+        window.location.reload();
+      });
+  }
 </script>"""
 
 

@@ -4,7 +4,6 @@ Phase 4 — CLI renderer (Rich) tests.
 
 from __future__ import annotations
 
-
 # ── render_node ───────────────────────────────────────────────────────────────
 
 
@@ -90,9 +89,7 @@ def test_render_table_returns_rich_table() -> None:
     from pyui.compiler.ir import build_ir_node
     from pyui.renderers.cli.generator import render_node
 
-    node = build_ir_node(
-        Table(headers=["Name", "Score"], rows=[["Alice", "95"], ["Bob", "87"]])
-    )
+    node = build_ir_node(Table(headers=["Name", "Score"], rows=[["Alice", "95"], ["Bob", "87"]]))
     result = render_node(node)
     assert isinstance(result, RichTable)
 
@@ -213,15 +210,47 @@ def test_all_renderers_registered() -> None:
     from pyui.renderers.cli.generator import _RENDERERS
 
     required = [
-        "button", "text", "heading", "grid", "flex", "stack",
-        "container", "divider", "spacer", "badge", "tag", "avatar",
-        "icon", "image", "markdown", "video", "input", "textarea",
-        "select", "checkbox", "toggle", "slider", "form",
-        "alert", "toast", "modal", "drawer", "tooltip",
-        "progress", "spinner", "skeleton",
-        "table", "stat", "chart",
-        "nav", "tabs", "breadcrumb", "pagination", "menu",
-        "list", "sidebar_layout",
+        "button",
+        "text",
+        "heading",
+        "grid",
+        "flex",
+        "stack",
+        "container",
+        "divider",
+        "spacer",
+        "badge",
+        "tag",
+        "avatar",
+        "icon",
+        "image",
+        "markdown",
+        "video",
+        "input",
+        "textarea",
+        "select",
+        "checkbox",
+        "toggle",
+        "slider",
+        "form",
+        "alert",
+        "toast",
+        "modal",
+        "drawer",
+        "tooltip",
+        "progress",
+        "spinner",
+        "skeleton",
+        "table",
+        "stat",
+        "chart",
+        "nav",
+        "tabs",
+        "breadcrumb",
+        "pagination",
+        "menu",
+        "list",
+        "sidebar_layout",
     ]
     for t in required:
         assert t in _RENDERERS, f"Missing CLI renderer for type: {t}"

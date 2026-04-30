@@ -8,8 +8,14 @@ import pytest
 def test_default_tokens_complete() -> None:
     from pyui.theme.tokens import DEFAULT_TOKENS
 
-    required = ["color.primary", "color.background", "font.family",
-                "space.4", "radius.md", "shadow.sm"]
+    required = [
+        "color.primary",
+        "color.background",
+        "font.family",
+        "space.4",
+        "radius.md",
+        "shadow.sm",
+    ]
     for key in required:
         assert key in DEFAULT_TOKENS, f"Missing token: {key}"
 
@@ -87,6 +93,7 @@ def test_tokens_to_css_vars_uses_pyui_prefix() -> None:
 
 def test_tokens_to_figma_returns_json() -> None:
     import json
+
     from pyui.theme.engine import build_theme, tokens_to_figma
 
     theme = build_theme("light")
@@ -98,6 +105,7 @@ def test_tokens_to_figma_returns_json() -> None:
 
 def test_tokens_to_figma_color_type() -> None:
     import json
+
     from pyui.theme.engine import tokens_to_figma
 
     figma_json = tokens_to_figma({"color.primary": "#6C63FF"})
@@ -125,6 +133,7 @@ def test_theme_swap_script_returns_string() -> None:
 
 def test_build_theme_unknown_key_warns() -> None:
     import warnings
+
     from pyui.theme.engine import build_theme
 
     with warnings.catch_warnings(record=True) as w:

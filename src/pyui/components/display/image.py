@@ -8,7 +8,9 @@ class Image(BaseComponent):
 
     component_type = "image"
 
-    def __init__(self, src: str, alt: str = "", width: int | None = None, height: int | None = None) -> None:
+    def __init__(
+        self, src: str, alt: str = "", width: int | None = None, height: int | None = None
+    ) -> None:
         super().__init__()
         self.props.update(
             {

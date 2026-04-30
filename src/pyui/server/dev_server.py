@@ -43,8 +43,8 @@ _CSP = (
     "cdn.tailwindcss.com cdn.jsdelivr.net unpkg.com fonts.googleapis.com; "
     "style-src 'self' 'unsafe-inline' fonts.googleapis.com fonts.gstatic.com; "
     "font-src 'self' fonts.gstatic.com; "
-    "img-src 'self' data: blob:; "
-    "connect-src 'self' ws: wss:; "
+    "img-src 'self' data: blob: https:; "
+    "connect-src 'self' ws: wss: cdn.jsdelivr.net unpkg.com; "
     "frame-ancestors 'none';"
 )
 
@@ -74,6 +74,7 @@ async def _security_middleware(
         )
 
     response = await handler(request)
+    assert isinstance(response, web.StreamResponse)
 
     # Inject security headers on all responses
     for key, value in _SECURITY_HEADERS.items():
@@ -107,14 +108,14 @@ def _reimport_app(module_path: str, original_class: type[App]) -> type[App]:
 
     module = importlib.util.module_from_spec(spec)
     try:
-        spec.loader.exec_module(module)  # type: ignore[union-attr]
+        spec.loader.exec_module(module)
     except Exception as exc:
         raise RuntimeError(str(exc)) from exc
 
     # Find the App subclass in the freshly-loaded module
     for _name, obj in inspect.getmembers(module, inspect.isclass):
         if issubclass(obj, AppBase) and obj is not AppBase:
-            return obj  # type: ignore[return-value]
+            return obj
 
     return original_class
 
@@ -180,6 +181,7 @@ class PyUIDevServer:
                 self.app_class = new_class
 
             from pyui.compiler.ir import clear_registry
+
             clear_registry()
             self._ir_tree = build_ir_tree(self.app_class)
             self._generator = WebGenerator(self._ir_tree)
@@ -237,6 +239,7 @@ class PyUIDevServer:
         """POST /pyui-api/theme/{name} — hot-swap the app theme."""
         theme_name = request.match_info["name"]
         from pyui.exceptions import ThemeError
+        from pyui.state.reactive import ReactiveVar
         from pyui.theme.engine import build_theme, tokens_to_css_vars
 
         try:
@@ -248,10 +251,28 @@ class PyUIDevServer:
                 content_type="application/json",
             )
 
-        self.app_class.theme = theme_name
+        # Update theme - handle both ReactiveVar and plain string
+        if isinstance(self.app_class.theme, ReactiveVar):
+            self.app_class.theme.set(theme_name)
+        else:
+            self.app_class.theme = theme_name
+
+        # Also update current_theme if it exists (for storybook)
+        if hasattr(self.app_class, "current_theme") and isinstance(
+            self.app_class.current_theme, ReactiveVar
+        ):
+            self.app_class.current_theme.set(theme_name)
+
         css = tokens_to_css_vars(tokens)
+
+        # Return updated reactive state
+        state: dict[str, Any] = {}
+        for attr_name, value in inspect.getmembers(self.app_class):
+            if isinstance(value, ReactiveVar):
+                state[attr_name] = value.get()
+
         return web.Response(
-            text=json.dumps({"theme": theme_name, "css": css}),
+            text=json.dumps({"theme": theme_name, "css": css, "state": state}),
             content_type="application/json",
         )
 
@@ -287,6 +308,7 @@ class PyUIDevServer:
                 data = await request.json()
                 updates = data.get("data", {})
                 from pyui.state.reactive import ReactiveVar
+
                 for attr_name, new_val in updates.items():
                     for name, value in inspect.getmembers(self.app_class):
                         if name == attr_name and isinstance(value, ReactiveVar):
@@ -321,6 +343,7 @@ class PyUIDevServer:
                 )
 
         from pyui.state.reactive import ReactiveVar
+
         state: dict[str, Any] = {}
         for attr_name, value in inspect.getmembers(self.app_class):
             if isinstance(value, ReactiveVar):
@@ -341,6 +364,7 @@ class PyUIDevServer:
     async def _handle_devtools_state(self, request: web.Request) -> web.Response:
         """GET /pyui-api/devtools/state — return current reactive state snapshot."""
         from pyui.state.reactive import ReactiveVar
+
         state: dict[str, Any] = {}
         for attr_name, value in inspect.getmembers(self.app_class):
             if isinstance(value, ReactiveVar):
@@ -357,6 +381,7 @@ class PyUIDevServer:
                     updates[n.node_id] = {k: n.props.get(k) for k in n.reactive_props}
                 if n.children:
                     _collect(n.children)
+
         _collect(nodes)
 
     # ── Static helpers ────────────────────────────────────────────────────────
@@ -364,6 +389,7 @@ class PyUIDevServer:
     @staticmethod
     def _not_found_html(path: str) -> str:
         import html as h
+
         return f"""<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><title>404 — PyUI</title>
 <script src="https://cdn.tailwindcss.com"></script></head>
@@ -397,6 +423,7 @@ class PyUIDevServer:
         from rich import box
         from rich.console import Console
         from rich.panel import Panel
+
         console = Console()
 
         hot_reload_status = (
@@ -419,20 +446,25 @@ class PyUIDevServer:
         )
 
         if self.open_browser:
+
             def _open() -> None:
                 import time
+
                 time.sleep(0.8)
                 webbrowser.open(url)
+
             threading.Thread(target=_open, daemon=True).start()
 
         watcher = None
         if self.watch_file:
             from pyui.hotreload.watcher import FileWatcher
+
             watch_dir = str(Path(self.watch_file).parent)
             watcher = FileWatcher(watch_dir, on_change=self._on_file_change)
             watcher.start()
 
         try:
+
             async def _run() -> None:
                 self._loop = asyncio.get_running_loop()
                 # Create the lock inside the running loop
@@ -463,7 +495,10 @@ def run_dev_server(
 ) -> None:
     """Convenience function — create a PyUIDevServer and start it."""
     server = PyUIDevServer(
-        app_class, host=host, port=port,
-        open_browser=open_browser, watch_file=watch_file,
+        app_class,
+        host=host,
+        port=port,
+        open_browser=open_browser,
+        watch_file=watch_file,
     )
     server.start()

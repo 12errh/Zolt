@@ -6,7 +6,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-
 # ── Web pipeline ──────────────────────────────────────────────────────────────
 
 
@@ -110,6 +109,7 @@ def test_build_all_produces_three_subdirs(tmp_path: Path) -> None:
 def test_error_codes_on_missing_route() -> None:
     """MissingRouteError must carry PYUI-004 code."""
     import pytest
+
     from pyui.exceptions import MissingRouteError
 
     with pytest.raises(MissingRouteError) as exc_info:
@@ -125,6 +125,7 @@ def test_error_codes_on_missing_route() -> None:
 def test_error_codes_on_unknown_theme() -> None:
     """UnknownThemeError must carry PYUI-201 code."""
     import pytest
+
     from pyui.exceptions import UnknownThemeError
     from pyui.theme.engine import build_theme
 
@@ -137,6 +138,7 @@ def test_error_codes_on_unknown_theme() -> None:
 def test_error_codes_on_plugin_conflict() -> None:
     """PluginConflictError must carry PYUI-301 code."""
     import pytest
+
     from pyui.components.base import BaseComponent
     from pyui.exceptions import PluginConflictError
     from pyui.plugins.registry import clear_registry, register_component
@@ -163,6 +165,7 @@ def test_error_codes_on_plugin_conflict() -> None:
 def test_rendered_page_has_no_inline_secrets() -> None:
     """Rendered HTML must not contain any obvious secret patterns."""
     import re
+
     from pyui import App, Page, Text
     from pyui.compiler.ir import build_ir_tree
     from pyui.renderers.web.generator import WebGenerator
@@ -220,8 +223,9 @@ def test_graceful_component_error_does_not_crash_page() -> None:
 def test_example_dashboard_compiles(tmp_path: Path) -> None:
     """examples/dashboard/app.py must compile without errors."""
     from pathlib import Path as _Path
-    from pyui.compiler.discovery import discover_app
+
     from pyui.compiler import compile_app
+    from pyui.compiler.discovery import discover_app
 
     example = _Path(__file__).parent.parent.parent / "examples" / "dashboard" / "app.py"
     app_class = discover_app(str(example))
@@ -233,8 +237,9 @@ def test_example_dashboard_compiles(tmp_path: Path) -> None:
 def test_example_blog_compiles(tmp_path: Path) -> None:
     """examples/blog/app.py must compile without errors."""
     from pathlib import Path as _Path
-    from pyui.compiler.discovery import discover_app
+
     from pyui.compiler import compile_app
+    from pyui.compiler.discovery import discover_app
 
     example = _Path(__file__).parent.parent.parent / "examples" / "blog" / "app.py"
     app_class = discover_app(str(example))
