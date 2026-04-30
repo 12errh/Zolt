@@ -7,7 +7,35 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
 
-## [1.1.1] - 2026-04-30
+## [1.2.0] - 2026-04-30
+
+### Added
+- **5 new components**: `BlurHeading`, `Link`, `Section`, `VideoBg`, `FloatingNav`
+  - `BlurHeading` — word-by-word blur-reveal animated heading with fluid `clamp()` font sizing and automatic `font-heading` (Instrument Serif italic) applied
+  - `Link` — semantic `<a>` with `glass`, `primary`, `nav`, `footer` style variants and optional Lucide icon
+  - `Section` — `<section>` layout wrapper with `position:relative` and `overflow:hidden` for video-background layouts
+  - `VideoBg` — absolutely-positioned background video with HLS support (hls.js), gradient fades, desaturate filter
+  - `FloatingNav` — fixed glassmorphism pill navigation bar with logo, links, and CTA
+- **`BaseComponent.inlineStyle(css)`** — set raw inline CSS on any component (e.g. `clamp()` values, `text-shadow`, `z-index`)
+- **`App.head_scripts`** — list of CDN script URLs injected into `<head>` (used for hls.js)
+- **`App.extra_css`** — inject custom CSS into every page's `<style>` block
+- **`zolt templates`** — interactive CLI: lists all templates in a table, user picks by name or number, prompts for project name, scaffolds immediately
+- **`agency` scaffold template** — dark premium AI agency landing page available via `zolt new my-site --template agency` or `zolt templates`
+- **Agency example** (`examples/agency/`) — fully pure-Zolt, zero RawHTML in layout sections
+
+### Changed
+- `zolt new --template` now includes `agency` as a valid choice
+- `_render_flex` and `_render_section` now respect `inlineStyle()` values
+- `_render_text` now renders `inlineStyle()` as an inline `style` attribute
+
+### Fixed
+- Hero heading position — content now uses `inlineStyle("padding-top:clamp(...)")` for correct vertical placement
+- "Introducing AI-powered web design." badge text now visible — added `text-shadow` via `inlineStyle()`
+- Subtext visibility — explicit `color:rgba(255,255,255,0.9)` and `text-shadow` via `inlineStyle()`
+- Duplicate CSS classes on `BlurHeading` — renderer no longer manually reads `class_name` (post-processor handles it)
+
+---
+
 
 ### Fixed
 - **Theme switching** — `pyuiSetTheme` was not defined in the browser due to

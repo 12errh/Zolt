@@ -84,6 +84,8 @@ class App(metaclass=AppMeta):
     favicon: str | None = None
     theme: str | dict[str, str] = "light"
     fonts: list[str] = ["Inter"]
+    extra_css: str = ""
+    head_scripts: list[str] = []
     meta: dict[str, str] = {}
     plugins: list[Any] = []
 

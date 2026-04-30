@@ -43,6 +43,7 @@ class BaseComponent:
         self._width: str | int | None = None
         self._height: str | int | None = None
         self._classes: list[str] = []
+        self._inline_style: str = ""
         self._hidden: bool | ReactiveVar[bool] = False
         self._disabled: bool | ReactiveVar[bool] = False
         self._on_click: Callable[..., Any] | None = None
@@ -94,6 +95,11 @@ class BaseComponent:
     def className(self: _T, *classes: str) -> _T:
         """Append raw CSS class names (escape hatch for advanced users)."""
         self._classes.extend(classes)
+        return self
+
+    def inlineStyle(self: _T, css: str) -> _T:
+        """Set raw inline CSS style string (e.g. ``"padding-top:5rem;color:red"``)."""
+        self._inline_style = css
         return self
 
     # ── Visibility & state ────────────────────────────────────────────────────

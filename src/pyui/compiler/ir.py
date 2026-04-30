@@ -155,6 +155,8 @@ def build_ir_node(component: BaseComponent, path: str | None = None) -> IRNode:
     reactive_props: dict[str, list[str]] = {}
     props_copy = dict(component.props)
     props_copy["class_name"] = " ".join(component._classes)
+    if component._inline_style:
+        props_copy["inline_style"] = component._inline_style
 
     # Promote base component attributes into props so renderers can access them
     if component._disabled is not False:
@@ -309,6 +311,8 @@ def build_ir_tree(app_class: type[App]) -> IRTree:
             "version": app_class.version,
             "description": app_class.description,
             "favicon": app_class.favicon,
+            "extra_css": getattr(app_class, "extra_css", ""),
+            "head_scripts": getattr(app_class, "head_scripts", []),
         },
         pages=pages,
         theme=app_class.theme.get()

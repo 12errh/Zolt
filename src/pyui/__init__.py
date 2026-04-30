@@ -1,4 +1,4 @@
-__version__ = "1.1.1"
+__version__ = "1.2.0"
 
 from pyui.app import App
 from pyui.components.base import BaseComponent
@@ -6,9 +6,11 @@ from pyui.components.data import Chart, Stat, Table
 from pyui.components.display import (
     Avatar,
     Badge,
+    BlurHeading,
     Heading,
     Icon,
     Image,
+    Link,
     Markdown,
     RawHTML,
     Tag,
@@ -43,14 +45,16 @@ from pyui.components.layout import (
     Flex,
     Grid,
     List,
+    Section,
     Sidebar,
     Spacer,
     Split,
     Stack,
 )
-from pyui.components.media import Video
+from pyui.components.media import Video, VideoBg
 from pyui.components.navigation import (
     Breadcrumb,
+    FloatingNav,
     Menu,
     Nav,
     Pagination,
@@ -78,6 +82,7 @@ __all__ = [
     "Flex",
     "Grid",
     "List",
+    "Section",
     "Sidebar",
     "Spacer",
     "Split",
@@ -85,9 +90,11 @@ __all__ = [
     # Display
     "Avatar",
     "Badge",
+    "BlurHeading",
     "Heading",
     "Icon",
     "Image",
+    "Link",
     "Markdown",
     "RawHTML",
     "Tag",
@@ -121,8 +128,10 @@ __all__ = [
     "Nav",
     "Tabs",
     "Breadcrumb",
+    "FloatingNav",
     "Pagination",
     "Menu",
     # Media
     "Video",
+    "VideoBg",
 ]

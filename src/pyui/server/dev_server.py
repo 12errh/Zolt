@@ -44,7 +44,8 @@ _CSP = (
     "style-src 'self' 'unsafe-inline' fonts.googleapis.com fonts.gstatic.com; "
     "font-src 'self' fonts.gstatic.com; "
     "img-src 'self' data: blob: https:; "
-    "connect-src 'self' ws: wss: cdn.jsdelivr.net unpkg.com; "
+    "media-src 'self' blob: https:; "
+    "connect-src 'self' ws: wss: https: cdn.jsdelivr.net unpkg.com; "
     "frame-ancestors 'none';"
 )
 

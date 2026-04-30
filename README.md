@@ -38,6 +38,16 @@ cd my-dash
 zolt run
 ```
 
+Or browse all templates interactively:
+
+```bash
+zolt templates
+```
+
+Available templates: `blank`, `dashboard`, `landing`, `admin`, `auth`, `agency`
+
+The **agency** template is a dark premium AI agency landing page with glassmorphism effects, HLS video backgrounds, and animated headings — ready to run with `zolt run`.
+
 ---
 
 ## Hello World
@@ -95,13 +105,16 @@ class CounterApp(App):
 
 ---
 
-## 42+ built-in components
+## 47+ built-in components
 
 | Category | Components |
 |---|---|
-| Layout | `Flex`, `Grid`, `Stack`, `Container`, `Sidebar`, `Split`, `Divider`, `Spacer`, `List` |
-| Display | `Text`, `Heading`, `Badge`, `Tag`, `Avatar`, `Icon`, `Image`, `Markdown`, `Video` |
+| Layout | `Flex`, `Grid`, `Stack`, `Container`, `Section`, `Sidebar`, `Split`, `Divider`, `Spacer`, `List` |
+| Display | `Text`, `Heading`, `BlurHeading`, `Badge`, `Tag`, `Avatar`, `Icon`, `Image`, `Link`, `Markdown`, `Video` |
 | Input | `Button`, `Input`, `Textarea`, `Select`, `Checkbox`, `Radio`, `Toggle`, `Slider`, `DatePicker`, `FilePicker`, `Form` |
+| Feedback | `Alert`, `Toast`, `Modal`, `Drawer`, `Tooltip`, `Progress`, `Spinner`, `Skeleton` |
+| Navigation | `Nav`, `FloatingNav`, `Tabs`, `Breadcrumb`, `Pagination`, `Menu` |
+| Media | `Video`, `VideoBg` |
 | Feedback | `Alert`, `Toast`, `Modal`, `Drawer`, `Tooltip`, `Progress`, `Spinner`, `Skeleton` |
 | Navigation | `Nav`, `Tabs`, `Breadcrumb`, `Pagination`, `Menu` |
 | Data | `Table`, `Stat`, `Chart` |
@@ -128,7 +141,8 @@ class MyApp(App):
 
 | Command | Description |
 |---|---|
-| `zolt new <name>` | Scaffold a new project (`--template blank\|dashboard\|landing\|admin\|auth`) |
+| `zolt new <name>` | Scaffold a new project (`--template blank\|dashboard\|landing\|admin\|auth\|agency`) |
+| `zolt templates` | Browse all templates interactively and scaffold one |
 | `zolt run [app.py]` | Start dev server with hot reload (`--target web\|desktop\|cli`) |
 | `zolt build [app.py]` | Production build (`--target web\|desktop\|cli\|all`) |
 | `zolt storybook` | Open component gallery |

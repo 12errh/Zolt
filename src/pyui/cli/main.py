@@ -54,7 +54,7 @@ def main(ctx: click.Context, verbose: bool) -> None:
 @click.option(
     "--template",
     default="blank",
-    type=click.Choice(["blank", "dashboard", "landing", "admin", "auth"]),
+    type=click.Choice(["blank", "dashboard", "landing", "admin", "auth", "agency"]),
     show_default=True,
     help="Project template to scaffold from.",
 )
@@ -433,3 +433,121 @@ def cmd_info() -> None:
             border_style="cyan",
         )
     )
+
+
+# ── templates ─────────────────────────────────────────────────────────────────
+
+
+_TEMPLATE_INFO: dict[str, dict[str, str]] = {
+    "blank": {
+        "desc": "Minimal starter — one page, one button.",
+        "use": "Learning Zolt or starting from scratch.",
+    },
+    "dashboard": {
+        "desc": "Analytics dashboard with stats, chart, and table.",
+        "use": "Internal tools, admin panels, data apps.",
+    },
+    "landing": {
+        "desc": "Simple marketing landing page.",
+        "use": "Product pages, coming-soon pages.",
+    },
+    "admin": {
+        "desc": "Multi-page CRUD admin panel.",
+        "use": "Back-office tools, content management.",
+    },
+    "auth": {
+        "desc": "Login / signup flow.",
+        "use": "Authentication screens.",
+    },
+    "agency": {
+        "desc": "Dark premium AI agency landing page with glassmorphism, "
+        "HLS video backgrounds, and animated headings.",
+        "use": "Agency sites, product launches, portfolio pages.",
+    },
+}
+
+
+@main.command("templates")
+def cmd_templates() -> None:
+    """List all available project templates and optionally scaffold one."""
+    from rich.prompt import Confirm, Prompt
+    from rich.table import Table
+
+    console.print()
+    console.print(
+        Panel.fit(
+            "[bold cyan]Zolt Project Templates[/bold cyan]\n"
+            "[dim]Choose a template to scaffold a new project.[/dim]",
+            box=box.ASCII,
+            border_style="cyan",
+        )
+    )
+    console.print()
+
+    table = Table(
+        show_header=True,
+        header_style="bold cyan",
+        box=box.SIMPLE,
+        padding=(0, 2),
+    )
+    table.add_column("#", style="dim", width=3)
+    table.add_column("Template", style="bold")
+    table.add_column("Description")
+    table.add_column("Best for", style="dim")
+
+    names = list(_TEMPLATE_INFO.keys())
+    for i, name in enumerate(names, 1):
+        info = _TEMPLATE_INFO[name]
+        table.add_row(str(i), name, info["desc"], info["use"])
+
+    console.print(table)
+
+    # Interactive selection
+    choice = Prompt.ask(
+        "\nEnter template name or number (or [dim]q[/dim] to quit)",
+        default="q",
+    )
+
+    if choice.lower() in ("q", "quit", ""):
+        return
+
+    # Resolve number → name
+    if choice.isdigit():
+        idx = int(choice) - 1
+        if 0 <= idx < len(names):
+            template = names[idx]
+        else:
+            console.print(f"[red]Invalid number:[/red] {choice}")
+            return
+    elif choice in _TEMPLATE_INFO:
+        template = choice
+    else:
+        console.print(f"[red]Unknown template:[/red] [cyan]{choice}[/cyan]")
+        return
+
+    info = _TEMPLATE_INFO[template]
+    console.print(f"\n[bold]Selected:[/bold] [cyan]{template}[/cyan] — {info['desc']}\n")
+
+    project_name = Prompt.ask("Project name", default=f"my-{template}-app")
+
+    if not Confirm.ask(
+        f"Scaffold [cyan]{project_name}[/cyan] from [cyan]{template}[/cyan] template?",
+        default=True,
+    ):
+        console.print("[dim]Cancelled.[/dim]")
+        return
+
+    from pyui.scaffold import create_project
+
+    try:
+        project_path = create_project(project_name, template=template)
+        console.print(
+            f"\n[green]✓[/green] Created [cyan]{project_name}[/cyan] "
+            f"at [dim]{project_path}[/dim]\n\n"
+            f"  [dim]cd {project_name}[/dim]\n"
+            f"  [dim]zolt run[/dim]"
+        )
+    except FileExistsError:
+        console.print(f"[red]Error:[/red] Directory [cyan]{project_name}[/cyan] already exists.")
+    except Exception as exc:
+        console.print(f"[red]Error:[/red] {exc}")

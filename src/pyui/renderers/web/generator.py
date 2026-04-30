@@ -289,6 +289,7 @@ _PAGE_TEMPLATE = """\
   </style>
   __PYUI_DARK_SCRIPT__
   {favicon_tag}
+  {head_scripts}
 </head>
 <body class="min-h-screen antialiased theme-transition"
       style="background-color: var(--pyui-color-background, #fff); color: var(--pyui-color-text, #111827);"
@@ -584,6 +585,12 @@ def _render_node(node: IRNode) -> str:
         "list": _render_list,
         "raw_html": _render_raw_html,
         "page": _render_page_node,  # page-root wrapper (unused normally)
+        # ── New components ────────────────────────────────────────────────────
+        "link": _render_link,
+        "section": _render_section,
+        "video_bg": _render_video_bg,
+        "blur_heading": _render_blur_heading,
+        "floating_nav": _render_floating_nav,
     }
     renderer = dispatch.get(node.type)
     if renderer is None:
@@ -711,7 +718,10 @@ def _render_text(node: IRNode) -> str:
     if "content" in node.reactive_props:
         reactive_attr = f" x-text=\"$store.pyui.nodes['{node.node_id}']?.content\""
 
-    return f'<{element} id="{node.node_id}" class="{classes}"{reactive_attr}>{safe}</{element}>'
+    inline_style = node.props.get("inline_style", "")
+    style_attr = f' style="{inline_style}"' if inline_style else ""
+
+    return f'<{element} id="{node.node_id}" class="{classes}"{reactive_attr}{style_attr}>{safe}</{element}>'
 
 
 def _render_heading(node: IRNode) -> str:
@@ -744,10 +754,11 @@ def _render_flex(node: IRNode) -> str:
     gap = node.props.get("gap", 4)
     wrap = node.props.get("wrap", False)
     classes = tw.flex_classes(direction, align, justify, gap, wrap)
-    # Use inline gap so CDN JIT doesn't need to scan dynamic class names
     gap_px = gap * 4
+    extra_style = node.props.get("inline_style", "")
+    style = f"gap:{gap_px}px;{extra_style}" if extra_style else f"gap:{gap_px}px"
     inner = "\n".join(f"  {_render_node(child)}" for child in node.children)
-    return f'<div id="{node.node_id}" class="{classes}" style="gap:{gap_px}px">\n{inner}\n</div>'
+    return f'<div id="{node.node_id}" class="{classes}" style="{style}">\n{inner}\n</div>'
 
 
 def _render_stack(node: IRNode) -> str:
@@ -1594,6 +1605,227 @@ def _render_page_node(node: IRNode) -> str:
     return _children_html(node)
 
 
+# ── New component renderers ───────────────────────────────────────────────────
+
+
+def _render_link(node: IRNode) -> str:
+    """Render a Link component as an <a> tag."""
+    text = html_module.escape(str(node.props.get("text", "")))
+    href = html_module.escape(str(node.props.get("href", "#")))
+    external = node.props.get("external", False)
+    icon_name = node.props.get("icon")
+    icon_pos = node.props.get("icon_position", "right")
+    variant = node.style_variant or "nav"
+
+    target = ' target="_blank" rel="noopener noreferrer"' if external else ""
+
+    # Style variants
+    style_map = {
+        "primary": (
+            "inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 "
+            "bg-white text-black text-sm font-medium font-body "
+            "hover:bg-white/90 transition-colors no-underline"
+        ),
+        "ghost": (
+            "inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 "
+            "border border-white/20 text-white text-sm font-medium font-body "
+            "hover:bg-white/10 transition-colors no-underline liquid-glass-strong"
+        ),
+        "glass": (
+            "inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 "
+            "text-white text-sm font-medium font-body "
+            "no-underline liquid-glass-strong"
+        ),
+        "nav": (
+            "px-3 py-2 text-sm font-medium text-white/90 font-body "
+            "hover:text-white transition-colors no-underline rounded-full"
+        ),
+        "footer": (
+            "text-xs font-body text-white/40 hover:text-white/70 transition-colors no-underline"
+        ),
+    }
+    classes = style_map.get(variant, style_map["nav"])
+    # class_name from .className() is injected by the post-processor — don't duplicate
+
+    icon_html = (
+        f'<i data-lucide="{html_module.escape(icon_name)}" style="width:14px;height:14px;"></i>'
+        if icon_name
+        else ""
+    )
+
+    if icon_name and icon_pos == "left":
+        inner = f"{icon_html}{text}"
+    elif icon_name:
+        inner = f"{text}{icon_html}"
+    else:
+        inner = text
+
+    return f'<a id="{node.node_id}" href="{href}" class="{classes}"{target}>{inner}</a>'
+
+
+def _render_section(node: IRNode) -> str:
+    """Render a Section layout component as a <section> with relative positioning."""
+    min_height = node.props.get("min_height", 400)
+    bg = node.props.get("bg", "#000")
+    extra_style = node.props.get("inline_style", "")
+
+    style = f"position:relative;overflow:hidden;width:100%;min-height:{min_height}px;"
+    if bg:
+        style += f"background:{html_module.escape(str(bg))};"
+    if extra_style:
+        style += extra_style
+
+    inner = "\n".join(f"  {_render_node(child)}" for child in node.children)
+    # class_name from .className() injected by post-processor into class=""
+    return f'<section id="{node.node_id}" class="" style="{style}">\n{inner}\n</section>'
+
+
+def _render_video_bg(node: IRNode) -> str:
+    """Render a VideoBg — absolutely positioned background video with gradient fades."""
+    src = html_module.escape(str(node.props.get("src", "")))
+    hls = node.props.get("hls", False)
+    desaturate = node.props.get("desaturate", False)
+    fade_height = int(node.props.get("fade_height", 160))
+    poster = node.props.get("poster")
+
+    vid_id = node.node_id
+    filter_style = "filter:saturate(0);" if desaturate else ""
+    poster_attr = f' poster="{html_module.escape(str(poster))}"' if poster else ""
+
+    video_tag = (
+        f'<video id="{vid_id}" autoplay loop muted playsinline{poster_attr} '
+        f'style="position:absolute;inset:0;width:100%;height:100%;'
+        f'object-fit:cover;z-index:0;{filter_style}">'
+    )
+
+    if hls:
+        # HLS source loaded via JS; no <source> tag needed
+        video_tag += "</video>"
+        hls_script = (
+            f"<script>\n"
+            f"(function(){{\n"
+            f"  var v=document.getElementById('{vid_id}');\n"
+            f"  if(window.Hls&&Hls.isSupported()){{\n"
+            f"    var h=new Hls();h.loadSource('{src}');h.attachMedia(v);\n"
+            f"  }}else if(v.canPlayType('application/vnd.apple.mpegurl')){{\n"
+            f"    v.src='{src}';\n"
+            f"  }}\n"
+            f"}})();\n"
+            f"</script>"
+        )
+    else:
+        video_tag += f'<source src="{src}" type="video/mp4"></video>'
+        hls_script = ""
+
+    fades = ""
+    if fade_height > 0:
+        fades = (
+            f'<div style="position:absolute;top:0;left:0;right:0;height:{fade_height}px;'
+            f"background:linear-gradient(to bottom,#000,transparent);"
+            f'z-index:1;pointer-events:none;"></div>\n'
+            f'<div style="position:absolute;bottom:0;left:0;right:0;height:{fade_height}px;'
+            f"background:linear-gradient(to top,#000,transparent);"
+            f'z-index:1;pointer-events:none;"></div>'
+        )
+
+    return f"{video_tag}\n{hls_script}\n{fades}"
+
+
+def _render_blur_heading(node: IRNode) -> str:
+    """Render a BlurHeading — word-by-word blur-reveal animated heading."""
+    text = str(node.props.get("text", ""))
+    level = int(node.props.get("level", 1))
+    delay_ms = int(node.props.get("delay_ms", 100))
+
+    words = text.split()
+    spans = []
+    for i, word in enumerate(words):
+        delay = i * delay_ms
+        spans.append(f'<span style="animation-delay:{delay}ms">{html_module.escape(word)}</span>')
+    inner = "&nbsp;".join(spans)
+
+    # Fluid font sizes per heading level
+    size_map = {
+        1: "clamp(3rem,8vw,6rem)",
+        2: "clamp(2.25rem,5vw,4rem)",
+        3: "clamp(1.75rem,4vw,3rem)",
+        4: "clamp(1.25rem,3vw,2rem)",
+        5: "clamp(1rem,2vw,1.5rem)",
+        6: "clamp(0.875rem,1.5vw,1.25rem)",
+    }
+    font_size = size_map.get(level, size_map[1])
+
+    # font-heading applies Instrument Serif italic; word-reveal triggers animation.
+    # class_name from .className() is injected by the post-processor automatically.
+    return (
+        f'<h{level} id="{node.node_id}" class="word-reveal font-heading" '
+        f'style="font-size:{font_size};line-height:0.9;letter-spacing:-0.03em;">'
+        f"{inner}"
+        f"</h{level}>"
+    )
+
+
+def _render_floating_nav(node: IRNode) -> str:
+    """Render a FloatingNav — fixed glassmorphism pill navigation bar."""
+    logo_src = node.props.get("logo_src")
+    logo_alt = html_module.escape(str(node.props.get("logo_alt", "")))
+    links: list[tuple[str, str]] = node.props.get("links", [])
+    cta_text = node.props.get("cta_text")
+    cta_href = html_module.escape(str(node.props.get("cta_href", "#")))
+
+    logo_html = ""
+    if logo_src:
+        safe_src = html_module.escape(str(logo_src))
+        logo_html = (
+            f'<img src="{safe_src}" alt="{logo_alt}" '
+            f'style="width:2.5rem;height:2.5rem;object-fit:contain;">'
+        )
+
+    link_items = []
+    for label, href in links:
+        safe_href = html_module.escape(str(href))
+        safe_label = html_module.escape(str(label))
+        link_items.append(
+            f'<a href="{safe_href}" style="padding:0.5rem 0.75rem;font-size:0.875rem;'
+            f"font-weight:500;color:rgba(255,255,255,0.9);font-family:'Barlow',sans-serif;"
+            f'text-decoration:none;border-radius:9999px;transition:color 0.15s;">'
+            f"{safe_label}</a>"
+        )
+
+    cta_html = ""
+    if cta_text:
+        safe_cta = html_module.escape(str(cta_text))
+        cta_html = (
+            f'<a href="{cta_href}" class="liquid-glass-strong" '
+            f'style="display:inline-flex;align-items:center;gap:0.25rem;'
+            f"padding:0.375rem 0.875rem;border-radius:9999px;background:white;"
+            f"color:black;font-size:0.875rem;font-weight:500;"
+            f"font-family:'Barlow',sans-serif;text-decoration:none;margin-left:0.25rem;\">"
+            f"{safe_cta}"
+            f'<i data-lucide="arrow-up-right" style="width:14px;height:14px;"></i>'
+            f"</a>"
+        )
+
+    links_html = "\n    ".join(link_items)
+    pill_html = (
+        f'<div class="liquid-glass" '
+        f'style="border-radius:9999px;padding:0.25rem 0.375rem;'
+        f'display:flex;align-items:center;gap:0.125rem;">\n'
+        f"    {links_html}\n"
+        f"    {cta_html}\n"
+        f"  </div>"
+    )
+
+    return (
+        f'<nav id="{node.node_id}" '
+        f'style="position:fixed;top:1rem;left:0;right:0;z-index:50;'
+        f'padding:0 2rem;display:flex;align-items:center;justify-content:space-between;">\n'
+        f"  {logo_html}\n"
+        f"  {pill_html}\n"
+        f"</nav>"
+    )
+
+
 # ── Full-page HTML builder ────────────────────────────────────────────────────
 
 
@@ -1645,6 +1877,12 @@ class WebGenerator:
         if favicon:
             favicon_tag = f'<link rel="icon" href="{html_module.escape(favicon)}" />'
 
+        # Extra <script> tags in <head> (e.g. hls.js CDN)
+        head_scripts = self.ir_tree.app_meta.get("head_scripts", [])
+        head_scripts_html = "\n  ".join(
+            f'<script src="{html_module.escape(str(s))}"></script>' for s in head_scripts
+        )
+
         from pyui.theme.engine import dark_mode_script, theme_swap_script
 
         pages_json = json.dumps(
@@ -1662,8 +1900,9 @@ class WebGenerator:
                 ),
                 description=html_module.escape(self.ir_tree.app_meta.get("description", "")),
                 css_vars=css_vars,
-                extra_css="",
+                extra_css=self.ir_tree.app_meta.get("extra_css", ""),
                 favicon_tag=favicon_tag,
+                head_scripts=head_scripts_html,
                 layout_class=layout_class,
                 content=content,
                 state_json=state_json,
