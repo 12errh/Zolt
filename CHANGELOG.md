@@ -7,6 +7,31 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
 
+## [1.1.1] - 2026-04-30
+
+### Fixed
+- **Theme switching** — `pyuiSetTheme` was not defined in the browser due to
+  JS brace escaping bug in the template engine. Scripts are now injected via
+  sentinel replacement instead of `str.format()`, so `{`/`}` in JS are never
+  mangled.
+- **Alpine data** — `x-data` was rendering as the literal string `{alpine_data}`
+  instead of the actual JSON. Fixed with the same sentinel approach.
+- **Theme colors not applying** — components use hardcoded Tailwind classes that
+  ignore CSS variables. `tokens_to_css_vars()` now emits `!important` CSS
+  overrides for all key Tailwind classes so every theme visually applies.
+- **Body background** — removed hardcoded `bg-white text-gray-900` from `<body>`,
+  now uses `var(--pyui-color-background)` and `var(--pyui-color-text)`.
+- **Hot reload off in storybook** — `run_storybook()` now passes `watch_file`
+  so the `FileWatcher` is active during `zolt storybook`.
+- **CSP blocking images** — `img-src` now allows `https:` for external images.
+
+### Changed
+- Ruff: auto-fixed 66 lint issues across `src/` and `tests/`.
+- Ruff format: reformatted 17 files.
+- Mypy: resolved all type errors in `dev_server.py` and `storybook.py`.
+
+---
+
 ## [1.1.0] - 2026-04-26
 
 ### Changed
