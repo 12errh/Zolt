@@ -28,6 +28,17 @@ from pyui.page import Page
 if TYPE_CHECKING:
     from pyui.app import App
 
+
+def _get_source_file(app_class: type[App]) -> str | None:
+    """Return the source file path of the App class, or None if unavailable."""
+    import inspect
+
+    try:
+        return inspect.getfile(app_class)
+    except (TypeError, OSError):
+        return None
+
+
 # Global event-handler registry — maps handler_id → callable.
 # The dev server looks handlers up here on each event POST.
 _handler_registry: dict[str, Callable[..., Any]] = {}
@@ -313,6 +324,7 @@ def build_ir_tree(app_class: type[App]) -> IRTree:
             "favicon": app_class.favicon,
             "extra_css": getattr(app_class, "extra_css", ""),
             "head_scripts": getattr(app_class, "head_scripts", []),
+            "source_file": _get_source_file(app_class),
         },
         pages=pages,
         theme=app_class.theme.get()

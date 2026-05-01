@@ -7,7 +7,26 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
 
-## [1.2.1] - 2026-04-30
+## [1.2.2] - 2026-04-30
+
+### Fixed
+- `zolt build` now copies `images/`, `public/`, `assets/` directories from the
+  app source folder into `dist/` so static assets (logos, poster images) are
+  available in the build output.
+
+### Changed
+- Deleted dead `_AGENCY_APP` string template from `scaffold.py` (~300 lines).
+  The agency scaffold now exclusively uses `_scaffold_agency()` which copies
+  `examples/agency/` directly.
+
+### Tests
+- Added 48 unit tests for v1.2 components: `BlurHeading` (9), `Link` (10),
+  `Section` (7), `VideoBg` (11), `FloatingNav` (11).
+  Total test count: 291 (was 243).
+
+---
+
+
 
 ### Fixed
 - `zolt new --template agency` now scaffolds the exact same multi-file

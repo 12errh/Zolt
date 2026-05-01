@@ -1918,6 +1918,10 @@ class WebGenerator:
         """
         Write all pages to *output_dir* as HTML files.
 
+        Also copies any ``images/`` or ``public/`` directory found next to the
+        app source file so static assets (logos, poster images, etc.) are
+        available in the build output.
+
         The root page (``route="/"`) is written as ``index.html``.
         Other pages are written as ``<route-slug>.html``.
 
@@ -1926,6 +1930,7 @@ class WebGenerator:
         dict
             Build stats: pages written, total size, file list.
         """
+        import shutil
         import time
 
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -1943,6 +1948,20 @@ class WebGenerator:
 
             out_file.write_text(html, encoding="utf-8")
             files.append({"file": out_file.name, "size_kb": round(len(html.encode()) / 1024, 1)})
+
+        # Copy static asset directories (images/, public/) from the app source dir
+        app_meta = self.ir_tree.app_meta
+        app_source = app_meta.get("source_file")
+        if app_source:
+            source_dir = Path(app_source).parent
+            for asset_dir_name in ("images", "public", "assets"):
+                asset_dir = source_dir / asset_dir_name
+                if asset_dir.exists() and asset_dir.is_dir():
+                    dest = output_dir / asset_dir_name
+                    if dest.exists():
+                        shutil.rmtree(dest)
+                    shutil.copytree(asset_dir, dest)
+                    files.append({"file": f"{asset_dir_name}/", "size_kb": 0})
 
         elapsed = round((time.perf_counter() - start) * 1000)
         total_kb = sum(f["size_kb"] for f in files)
