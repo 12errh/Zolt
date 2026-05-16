@@ -10,7 +10,6 @@ Token naming convention: dash-separated for CSS compatibility
 
 from __future__ import annotations
 
-
 # ── Color Palette ─────────────────────────────────────────────────────────────
 # Semantic names — not "blue-500", but "primary", "danger", "text"
 
@@ -21,40 +20,32 @@ COLORS = {
     "color-primary-active": "#4840CC",
     "color-primary-fg": "#FFFFFF",  # foreground (text) on primary bg
     "color-primary-subtle": "#EEF2FF",  # very light primary tint
-    
     # Secondary
     "color-secondary": "#F3F4F6",
     "color-secondary-hover": "#E5E7EB",
     "color-secondary-fg": "#111827",
-    
     # Backgrounds
     "color-bg": "#FFFFFF",
     "color-surface": "#F9FAFB",
     "color-surface-2": "#F3F4F6",
     "color-surface-3": "#E5E7EB",
-    
     # Borders
     "color-border": "#E5E7EB",
     "color-border-strong": "#D1D5DB",
-    
     # Text
     "color-text": "#111827",
     "color-text-muted": "#6B7280",
     "color-text-inverse": "#FFFFFF",
-    
     # Semantic colors
     "color-success": "#10B981",
     "color-success-hover": "#059669",
     "color-success-fg": "#FFFFFF",
-    
     "color-warning": "#F59E0B",
     "color-warning-hover": "#D97706",
     "color-warning-fg": "#FFFFFF",
-    
     "color-danger": "#EF4444",
     "color-danger-hover": "#DC2626",
     "color-danger-fg": "#FFFFFF",
-    
     "color-info": "#3B82F6",
     "color-info-hover": "#2563EB",
     "color-info-fg": "#FFFFFF",
@@ -65,29 +56,25 @@ COLORS = {
 TYPOGRAPHY = {
     "font-family": "Inter, system-ui, -apple-system, sans-serif",
     "font-family-mono": "JetBrains Mono, Fira Code, monospace",
-    
     # Font sizes (using rem for accessibility)
-    "font-size-xs": "0.75rem",     # 12px
-    "font-size-sm": "0.875rem",    # 14px
-    "font-size-base": "1rem",      # 16px
-    "font-size-lg": "1.125rem",    # 18px
-    "font-size-xl": "1.25rem",     # 20px
-    "font-size-2xl": "1.5rem",     # 24px
-    "font-size-3xl": "1.875rem",   # 30px
-    "font-size-4xl": "2.25rem",    # 36px
-    "font-size-5xl": "3rem",       # 48px
-    
+    "font-size-xs": "0.75rem",  # 12px
+    "font-size-sm": "0.875rem",  # 14px
+    "font-size-base": "1rem",  # 16px
+    "font-size-lg": "1.125rem",  # 18px
+    "font-size-xl": "1.25rem",  # 20px
+    "font-size-2xl": "1.5rem",  # 24px
+    "font-size-3xl": "1.875rem",  # 30px
+    "font-size-4xl": "2.25rem",  # 36px
+    "font-size-5xl": "3rem",  # 48px
     # Font weights
     "font-weight-normal": "400",
     "font-weight-medium": "500",
     "font-weight-semibold": "600",
     "font-weight-bold": "700",
-    
     # Line heights
     "line-height-tight": "1.25",
     "line-height-normal": "1.5",
     "line-height-relaxed": "1.75",
-    
     # Letter spacing
     "letter-spacing-tight": "-0.025em",
     "letter-spacing-normal": "0",
@@ -98,29 +85,29 @@ TYPOGRAPHY = {
 
 SPACING = {
     "space-0": "0",
-    "space-1": "0.25rem",   # 4px
-    "space-2": "0.5rem",    # 8px
-    "space-3": "0.75rem",   # 12px
-    "space-4": "1rem",      # 16px
-    "space-5": "1.25rem",   # 20px
-    "space-6": "1.5rem",    # 24px
-    "space-8": "2rem",      # 32px
-    "space-10": "2.5rem",   # 40px
-    "space-12": "3rem",     # 48px
-    "space-16": "4rem",     # 64px
-    "space-20": "5rem",     # 80px
-    "space-24": "6rem",     # 96px
+    "space-1": "0.25rem",  # 4px
+    "space-2": "0.5rem",  # 8px
+    "space-3": "0.75rem",  # 12px
+    "space-4": "1rem",  # 16px
+    "space-5": "1.25rem",  # 20px
+    "space-6": "1.5rem",  # 24px
+    "space-8": "2rem",  # 32px
+    "space-10": "2.5rem",  # 40px
+    "space-12": "3rem",  # 48px
+    "space-16": "4rem",  # 64px
+    "space-20": "5rem",  # 80px
+    "space-24": "6rem",  # 96px
 }
 
 # ── Shape (Border Radius) ─────────────────────────────────────────────────────
 
 RADIUS = {
     "radius-none": "0",
-    "radius-sm": "0.25rem",    # 4px
-    "radius-md": "0.5rem",     # 8px
-    "radius-lg": "0.75rem",    # 12px
-    "radius-xl": "1rem",       # 16px
-    "radius-2xl": "1.5rem",    # 24px
+    "radius-sm": "0.25rem",  # 4px
+    "radius-md": "0.5rem",  # 8px
+    "radius-lg": "0.75rem",  # 12px
+    "radius-xl": "1rem",  # 16px
+    "radius-2xl": "1.5rem",  # 24px
     "radius-full": "9999px",
 }
 
@@ -227,19 +214,15 @@ DARK_COLORS = {
     "color-primary": "#7C73FF",
     "color-primary-hover": "#6A61F0",
     "color-primary-active": "#5850E0",
-    
     "color-secondary": "#1E293B",
     "color-secondary-hover": "#334155",
     "color-secondary-fg": "#F1F5F9",
-    
     "color-bg": "#0F172A",
     "color-surface": "#1E293B",
     "color-surface-2": "#334155",
     "color-surface-3": "#475569",
-    
     "color-border": "#334155",
     "color-border-strong": "#475569",
-    
     "color-text": "#F1F5F9",
     "color-text-muted": "#94A3B8",
     "color-text-inverse": "#0F172A",

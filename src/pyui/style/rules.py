@@ -12,8 +12,7 @@ This abstraction allows the same style definition to be rendered as:
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Optional
+from dataclasses import dataclass
 
 from pyui.style.tokens import TOKENS
 
@@ -22,7 +21,7 @@ from pyui.style.tokens import TOKENS
 class StyleRule:
     """
     A single CSS property declaration with optional modifiers.
-    
+
     Attributes
     ----------
     prop : str
@@ -40,98 +39,99 @@ class StyleRule:
     important : bool
         Whether to add !important flag
     """
+
     prop: str
     value: str
-    pseudo: Optional[str] = None
-    state: Optional[str] = None
-    media: Optional[str] = None
-    component: Optional[str] = None
+    pseudo: str | None = None
+    state: str | None = None
+    media: str | None = None
+    component: str | None = None
     important: bool = False
-    
+
     def render_css(self, selector: str = ".element") -> str:
         """
         Render this rule as a CSS declaration.
-        
+
         Examples
         --------
         >>> rule = StyleRule("color", "var(--z-text)")
         >>> rule.render_css(".btn")
         '.btn { color: var(--z-text); }'
-        
+
         >>> rule = StyleRule("bg", "var(--z-primary)", pseudo=":hover")
         >>> rule.render_css(".btn")
         '.btn:hover { background-color: var(--z-primary); }'
         """
         # Convert shorthand prop to full CSS property
         css_prop = _prop_to_css(self.prop)
-        
+
         # Add !important if needed
         value = self.value
         if self.important:
             value = f"{value} !important"
-        
+
         # Build selector with pseudo-class
         full_selector = selector
         if self.pseudo:
             full_selector = f"{selector}{self.pseudo}"
-        
+
         return f"{full_selector} {{ {css_prop}: {value}; }}"
-    
+
     def render_qss(self, selector: str = "QWidget") -> str:
         """
         Render this rule as Qt Style Sheet (QSS) declaration.
-        
+
         QSS is similar to CSS but has some differences in property names
         and supported features.
         """
         qss_prop = _prop_to_qss(self.prop)
-        
+
         value = self.value
         if self.important:
             value = f"{value} !important"
-        
+
         full_selector = selector
         if self.pseudo:
             # QSS uses different pseudo-class syntax
             qss_pseudo = _css_to_qss_pseudo(self.pseudo)
             full_selector = f"{selector}{qss_pseudo}"
-        
+
         if self.state:
             # QSS state selectors like :disabled
-            full_selector = f"{selector}[{self.state}=\"true\"]"
-        
+            full_selector = f'{selector}[{self.state}="true"]'
+
         return f"{full_selector} {{ {qss_prop}: {value}; }}"
-    
+
     @property
-    def key(self) -> tuple:
+    def key(self) -> tuple[str, str, str | None, str | None, str | None]:
         """
         Generate a unique key for deduplication.
-        
+
         Two rules are considered identical if they have the same
         prop, value, pseudo, state, and media query.
         """
         return (self.prop, self.value, self.pseudo, self.state, self.media)
-    
+
     def with_media(self, breakpoint: str) -> StyleRule:
         """
         Return a new rule wrapped in a media query.
-        
+
         Parameters
         ----------
         breakpoint : str
             Breakpoint name ("sm", "md", "lg", "xl", "2xl")
-            
+
         Returns
         -------
         StyleRule
             New rule with media query set
         """
         from zolt.style.tokens import MEDIA_QUERIES
-        
+
         media = MEDIA_QUERIES.get(breakpoint)
         if not media:
             raise ValueError(f"Unknown breakpoint: {breakpoint}")
-        
+
         return StyleRule(
             prop=self.prop,
             value=self.value,
@@ -141,7 +141,7 @@ class StyleRule:
             component=self.component,
             important=self.important,
         )
-    
+
     def with_important(self) -> StyleRule:
         """Return a new rule with !important flag."""
         return StyleRule(
@@ -158,33 +158,33 @@ class StyleRule:
 def token(name: str) -> str:
     """
     Look up a token value by name.
-    
+
     Parameters
     ----------
     name : str
         Token name (e.g., "color-primary", "space-4")
-        
+
     Returns
     -------
     str
         Token value formatted as CSS variable reference
-        
+
     Raises
     ------
     KeyError
         If token name not found
-        
+
     Examples
     --------
     >>> token("color-primary")
     'var(--z-color-primary)'
-    
+
     >>> token("space-4")
     'var(--z-space-4)'
     """
     if name not in TOKENS:
         raise KeyError(f"Token '{name}' not found. Available tokens: {list(TOKENS.keys())[:10]}...")
-    
+
     # Convert token name to CSS variable format
     var_name = f"--z-{name}"
     return f"var({var_name})"
