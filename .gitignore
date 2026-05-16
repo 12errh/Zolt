@@ -1,45 +1,18 @@
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-*.egg
-*.egg-info/
-dist/
-build/
-.eggs/
+```
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+
+# Environment
 .env
-.venv
-venv/
-env/
-.Python
-*.pyo
+.env.local
+*.env.*
 
-# Hatch
-.hatch/
-
-# pytest
-.pytest_cache/
-.coverage
-htmlcov/
-*.coveragerc
-
-# mypy
-.mypy_cache/
-*.pyi
-
-# ruff
-.ruff_cache/
-
-# IDE
+# Editors
 .vscode/
 .idea/
-*.swp
-*.swo
 
-# PyUI build output
-dist/
-.pyui_cache/
-
-# OS
-.DS_Store
-Thumbs.db
+# Original rules preserved
+test_output.log
+```
