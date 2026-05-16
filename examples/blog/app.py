@@ -138,18 +138,17 @@ class AboutPage(Page):
 
     def compose(self) -> None:
         Nav(items=[("Blog", "/"), ("About", "/about")])
-        with Container(size="md"):
-            with Flex(direction="col", gap=6).className("py-12"):
-                Heading("About PyUI", level=1)
-                Text(
-                    "PyUI is an open-source Python framework for building "
-                    "production-grade UIs without HTML, CSS, or JavaScript."
-                ).paragraph()
-                Text(
-                    "Write once, render anywhere — web, desktop, and terminal "
-                    "from a single Python codebase."
-                ).paragraph()
-                Button("View on GitHub").style("primary").icon("github")
+        with Container(size="md"), Flex(direction="col", gap=6).className("py-12"):
+            Heading("About PyUI", level=1)
+            Text(
+                "PyUI is an open-source Python framework for building "
+                "production-grade UIs without HTML, CSS, or JavaScript."
+            ).paragraph()
+            Text(
+                "Write once, render anywhere — web, desktop, and terminal "
+                "from a single Python codebase."
+            ).paragraph()
+            Button("View on GitHub").style("primary").icon("github")
 
 
 class BlogApp(App):

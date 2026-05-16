@@ -1,45 +1,37 @@
+```
+# Compiled Python files
+*.pyc
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-*.egg
-*.egg-info/
+
+# Dependencies
+.venv/
+venv/
+node_modules/
+
+# Build artifacts
 dist/
 build/
-.eggs/
+target/
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# Environment files
 .env
-.venv
-venv/
-env/
-.Python
-*.pyo
+.env.local
+*.env.*
 
-# Hatch
-.hatch/
-
-# pytest
-.pytest_cache/
-.coverage
-htmlcov/
-*.coveragerc
-
-# mypy
-.mypy_cache/
-*.pyi
-
-# ruff
-.ruff_cache/
-
-# IDE
+# Editors
 .vscode/
 .idea/
-*.swp
-*.swo
 
-# PyUI build output
-dist/
-.pyui_cache/
+# Coverage reports
+.coverage
+coverage/
+htmlcov/
 
-# OS
-.DS_Store
-Thumbs.db
+# Testing
+.pytest_cache/
+.mypy_cache/
+```

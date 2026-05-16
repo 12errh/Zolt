@@ -48,9 +48,7 @@ class HomePage(Page):
 
             with Flex(direction="col", gap=2):
                 for i, todo in enumerate(_todos):
-                    with Flex(
-                        align="center", justify="between", gap=4
-                    ).className(
+                    with Flex(align="center", justify="between", gap=4).className(
                         "p-4 bg-white border border-gray-100 rounded-xl "
                         "shadow-sm hover:shadow-md transition-shadow"
                     ):
