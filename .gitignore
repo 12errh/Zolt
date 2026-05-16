@@ -1,18 +1,30 @@
 ```
-# Logs and temp files
-*.log
-*.tmp
-*.swp
-
-# Environment
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+.venv/
 .env
 .env.local
 *.env.*
+
+# Build artifacts
+dist/
+build/
+target/
+
+# Logs
+*.log
 
 # Editors
 .vscode/
 .idea/
 
-# Original rules preserved
-test_output.log
+# Dependencies
+node_modules/
+.mypy_cache/
+.pytest_cache/
 ```
